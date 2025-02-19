@@ -1,0 +1,15 @@
+# Ignore the build output directories
+/build/
+
+# Ignore .vscode folder (VS Code settings)
+.vscode/
+
+# Ignore .devcontainer folder (VS Code Dev Container settings)
+.devcontainer/
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
