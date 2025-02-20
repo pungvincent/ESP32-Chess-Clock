@@ -10,12 +10,10 @@
 #define BUTTON_PLAYER_GPIO 2
 
 // Interruption
-TaskHandle_t ISR;
 #define ESP_INR_FLAG_DEFAULT 0
 
 // Initial time for each player (3 minutes = 180 seconds)
 #define PLAYER_TIME 180
-
 static int player1_time = PLAYER_TIME;
 static int player2_time = PLAYER_TIME;
 static bool player1_turn = true;  // Player 1 starts
@@ -96,8 +94,6 @@ void player1_task(void* arg) {
             }
             // Suspend player 1 task until button press resumes it
             xSemaphoreTake(xSemaphore, portMAX_DELAY);
-            // Wait for the next second
-            vTaskDelay(pdMS_TO_TICKS(1000));
         } else {
             if (player1_timer_running == true)
             {
@@ -122,8 +118,6 @@ void player2_task(void* arg) {
             }
             // Suspend player 2 task until button press resumes it
             xSemaphoreTake(xSemaphore, portMAX_DELAY);
-            // Wait for the next second
-            vTaskDelay(pdMS_TO_TICKS(1000));
         } else {
             if (player2_timer_running == true)
             {
