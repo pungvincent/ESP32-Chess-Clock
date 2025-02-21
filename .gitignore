@@ -7,9 +7,6 @@
 # Ignore .devcontainer folder (VS Code Dev Container settings)
 .devcontainer/
 
-# Ignore sdkconfig file
-sdkconfig
-
 # Ignore system-specific files
 .DS_Store
 Thumbs.db
