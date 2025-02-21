@@ -14,8 +14,8 @@
 
 // Initial time for each player (3 minutes = 180 seconds)
 #define PLAYER_TIME 180
-static int player1_time = PLAYER_TIME;
-static int player2_time = PLAYER_TIME;
+static int player1_time = PLAYER_TIME*100;  //Convert to hundredth of a second
+static int player2_time = PLAYER_TIME*100;  //Convert to hundredth of a second
 static bool player1_turn = true;  // Player 1 starts
 
 // Semaphore to synchronize tasks
@@ -32,7 +32,7 @@ bool player2_timer_running = false;  // Variable to track if player 2's timer is
 
 // Function to display the remaining time
 void print_time() {
-    printf("Player 1: %02d:%02d  Player 2: %02d:%02d\n", player1_time / 60, player1_time % 60, player2_time / 60, player2_time % 60);
+    printf("Player 1: %02d:%02d:%02d  Player 2: %02d:%02d:%02d\n", player1_time/(60*100), player1_time/100%60, player1_time%100, player2_time/(60*100), player2_time/100%60,player2_time%100);
 }
 
 // Timer callbacks functions (decrements time each seconds)
@@ -90,7 +90,7 @@ void player1_task(void* arg) {
             player1_timer_running = true;
             // Start player 1's timer
             if (!esp_timer_is_active(timer_handle)) {
-                ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle, 1000000));  // Start timer with an interval of 1 second
+                ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle, 10000));  // Start timer with an interval of 0.01 second (10000 µs)
             }
             // Suspend player 1 task until button press resumes it
             xSemaphoreTake(xSemaphore, portMAX_DELAY);
@@ -114,7 +114,7 @@ void player2_task(void* arg) {
             player2_timer_running = true;
             // Start player 2's timer
             if (!esp_timer_is_active(timer_handle2)) {
-                ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle2, 1000000));  // Start timer with an interval of 1 second
+                ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle2, 10000));  // Start timer with an interval of 0.01 second (10000 µs)
             }
             // Suspend player 2 task until button press resumes it
             xSemaphoreTake(xSemaphore, portMAX_DELAY);
