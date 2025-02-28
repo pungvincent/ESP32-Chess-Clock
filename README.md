@@ -1,11 +1,29 @@
 # ESP32-Chess-Clock
-ESP32-based chess clock using ESP-IDF
+ESP32-based chess clock using ESP-IDF.
 
 # Version 1.3
 The timer is set up at 3 minutes (Blitz) and it displays the time remaining for each player on the serial monitor each hundredth of seconds and each second on an oled screen ssd1306. This version implements two buttons (one for each player), a pause button, and a reset button.
 
 ## Improvement
-There's now two button for each player, a pause and a reset button.
+- Added a reset button
+- Added a pause button
+- Added other button to set the time of each player
+- Added an another button and display for player 2
+
+## menuconfig
+ You have to set this config value with menuconfig
+ CONFIG_INTERFACE
+
+ for i2c
+ CONFIG_MODEL
+ CONFIG_SDA_GPIO
+ CONFIG_SCL_GPIO
+ CONFIG_RESET_GPIO
+
+ for SPI
+ CONFIG_CS_GPIO
+ CONFIG_DC_GPIO
+ CONFIG_RESET_GPIO
 
 ## Code
 
@@ -13,9 +31,9 @@ Further explication of the code can be found [here](Code.md).
 
 ## Future improvement
 
-- Add a reset button
-- Add other button to set the time of each player for example
-- Add an another button and display for player 2
+- Because the 128*64 OLED display is too small, it would be ideal to use another two 16*2 LCD displays to display the time of each player. The current OLED Display would still be used to config all the setting.
+- For aesthetic purpose, the oled display could show an animation in the center to show, to show whose turn it is.
+
 
 # Resources
 This project uses the following library for driving the SSD1306 OLED display:
