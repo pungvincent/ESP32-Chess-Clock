@@ -10,29 +10,7 @@
 #include "ssd1306.h"
 
 #include "buttons.h"
-
-#define tag "SSD1306"
-
-//OLED Display Config
-SSD1306_t dev;
-int center, top, bottom;
-char lineChar[20];
-
-/*
- You have to set this config value with menuconfig
- CONFIG_INTERFACE
-
- for i2c
- CONFIG_MODEL
- CONFIG_SDA_GPIO
- CONFIG_SCL_GPIO
- CONFIG_RESET_GPIO
-
- for SPI
- CONFIG_CS_GPIO
- CONFIG_DC_GPIO
- CONFIG_RESET_GPIO
-*/
+#include "ssd1306_oled.h"
 
 // Initial time for each player (3 minutes = 180 seconds)
 const int PLAYER_TIME = 180;
@@ -54,7 +32,6 @@ esp_timer_handle_t timer_handle_display;
 //Track Variables
 bool player1_timer_running = false;  // Variable to track if player 1's timer is running
 bool player2_timer_running = false;  // Variable to track if player 2's timer is running
-
 
 // Function to display the remaining time
 void print_time() {
@@ -98,12 +75,9 @@ void display_timer(void* arg)
     strcat(time_display2, ":");  // Add a ":" between minutes and seconds
     strcat(time_display2, sec2);  // Add seconds to time_display2
 
-    // Display the formatted text
-    ssd1306_contrast(&dev, 0xff);
-    ssd1306_display_text_x3(&dev, 0, time_display1, 5, false);  // Display Player 1's time
-    ssd1306_display_text_x3(&dev, 4, time_display2, 5, false);  // Display Player 2's time  (The second display start at line 4 because at x3 size each character take 4 line for a display with 8 line)
+    //Display the result in the OLED Display;
+    OLED_display(time_display1, time_display2);
 }
-
 
 
 
@@ -184,42 +158,6 @@ void player2_task(void* arg) {
 
 void app_main() {
 
-    
-
-    // CONFIG_I2C_INTERFACE
-    #if CONFIG_I2C_INTERFACE
-        ESP_LOGI(tag, "INTERFACE is i2c");
-        ESP_LOGI(tag, "CONFIG_SDA_GPIO=%d",CONFIG_SDA_GPIO);
-        ESP_LOGI(tag, "CONFIG_SCL_GPIO=%d",CONFIG_SCL_GPIO);
-        ESP_LOGI(tag, "CONFIG_RESET_GPIO=%d",CONFIG_RESET_GPIO);
-        i2c_master_init(&dev, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO, CONFIG_RESET_GPIO);
-    #endif 
-    // CONFIG_SPI_INTERFACE
-    #if CONFIG_SPI_INTERFACE
-        ESP_LOGI(tag, "INTERFACE is SPI");
-        ESP_LOGI(tag, "CONFIG_MOSI_GPIO=%d",CONFIG_MOSI_GPIO);
-        ESP_LOGI(tag, "CONFIG_SCLK_GPIO=%d",CONFIG_SCLK_GPIO);
-        ESP_LOGI(tag, "CONFIG_CS_GPIO=%d",CONFIG_CS_GPIO);
-        ESP_LOGI(tag, "CONFIG_DC_GPIO=%d",CONFIG_DC_GPIO);
-        ESP_LOGI(tag, "CONFIG_RESET_GPIO=%d",CONFIG_RESET_GPIO);
-        spi_master_init(&dev, CONFIG_MOSI_GPIO, CONFIG_SCLK_GPIO, CONFIG_CS_GPIO, CONFIG_DC_GPIO, CONFIG_RESET_GPIO);
-    #endif 
-
-    #if CONFIG_FLIP
-	dev._flip = true;
-	ESP_LOGW(tag, "Flip upside down");
-    #endif
-    // CONFIG_SSD1306_128x64
-    #if CONFIG_SSD1306_128x64
-        ESP_LOGI(tag, "Panel is 128x64");
-        ssd1306_init(&dev, 128, 64);
-    #endif 
-    // CONFIG_SSD1306_128x32
-    #if CONFIG_SSD1306_128x32
-        ESP_LOGI(tag, "Panel is 128x32");
-        ssd1306_init(&dev, 128, 32);
-    #endif 
-
     // Initialize semaphore
     xSemaphore = xSemaphoreCreateBinary();
     if (xSemaphore == NULL) {
@@ -227,8 +165,10 @@ void app_main() {
         return;
     }
 
-    //Clear the screen once
-    ssd1306_clear_screen(&dev, false);
+    //Init the OLED Display
+    OLED_init();
+    //Clear the OLED Display once
+    OLED_clear();
 
     // Initialize buttons and timers
     init_buttons();
@@ -244,4 +184,5 @@ void app_main() {
     }
     // Display initial time
     print_time();
+
 }
