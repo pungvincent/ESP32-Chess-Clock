@@ -1,2 +1,2 @@
-idf_component_register(SRCS "ssd1306_oled.c" "buttons.c" "main.c"
+idf_component_register(SRCS "i2c-lcd.c" "buttons.c" "main.c"
                     INCLUDE_DIRS ".")
