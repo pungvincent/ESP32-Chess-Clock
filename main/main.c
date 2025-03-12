@@ -199,8 +199,10 @@ void app_main() {
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG, "I2C initialized successfully");
     
-    lcd_init();
-    lcd_clear();
+    lcd_init_player1();
+    lcd_clear_player1();
+    lcd_init_player2();
+    lcd_clear_player2();
 
     // Initialize buttons and timers
     init_buttons();
