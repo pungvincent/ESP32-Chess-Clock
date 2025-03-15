@@ -59,28 +59,31 @@ void IRAM_ATTR button_pause_isr(void* arg) {
     xSemaphoreGiveFromISR(xSemaphore, NULL);
 }
 
+esp_err_t gpio_setup_isr(int gpio_num, gpio_isr_t isr_handler)
+{
+    // Select the GPIO
+    esp_rom_gpio_pad_select_gpio(gpio_num);
+    // Set the GPIO direction as input
+    ESP_ERROR_CHECK(gpio_set_direction(gpio_num, GPIO_MODE_INPUT));
+    // Set the interrupt type (here, positive edge)
+    ESP_ERROR_CHECK(gpio_set_intr_type(gpio_num, GPIO_INTR_POSEDGE));
+    // Add the ISR handler for this GPIO
+    ESP_ERROR_CHECK(gpio_isr_handler_add(gpio_num, isr_handler, NULL));
+    return ESP_OK;
+}
+
+
 // Function to configure the buttons
 void init_buttons() {
     //Install interrupt services
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INR_FLAG_DEFAULT));
+
     // Config button for player 1
-    esp_rom_gpio_pad_select_gpio(BUTTON_PLAYER1_GPIO);
-    ESP_ERROR_CHECK(gpio_set_direction(BUTTON_PLAYER1_GPIO, GPIO_MODE_INPUT));
-    ESP_ERROR_CHECK(gpio_set_intr_type(BUTTON_PLAYER1_GPIO, GPIO_INTR_POSEDGE));    //Positive edge
-    ESP_ERROR_CHECK(gpio_isr_handler_add(BUTTON_PLAYER1_GPIO, button_player1_isr, NULL));
+    gpio_setup_isr(BUTTON_PLAYER1_GPIO, button_player1_isr);
     // Config button for player 2
-    esp_rom_gpio_pad_select_gpio(BUTTON_PLAYER2_GPIO);
-    ESP_ERROR_CHECK(gpio_set_direction(BUTTON_PLAYER2_GPIO, GPIO_MODE_INPUT));
-    ESP_ERROR_CHECK(gpio_set_intr_type(BUTTON_PLAYER2_GPIO, GPIO_INTR_POSEDGE));    //Positive edge
-    ESP_ERROR_CHECK(gpio_isr_handler_add(BUTTON_PLAYER2_GPIO, button_player2_isr, NULL));
+    gpio_setup_isr(BUTTON_PLAYER2_GPIO, button_player2_isr);
     // Config button for reset
-    esp_rom_gpio_pad_select_gpio(BUTTON_RESET_GPIO);
-    ESP_ERROR_CHECK(gpio_set_direction(BUTTON_RESET_GPIO, GPIO_MODE_INPUT));
-    ESP_ERROR_CHECK(gpio_set_intr_type(BUTTON_RESET_GPIO, GPIO_INTR_POSEDGE));    //Positive edge
-    ESP_ERROR_CHECK(gpio_isr_handler_add(BUTTON_RESET_GPIO, button_reset_isr, NULL));
+    gpio_setup_isr(BUTTON_RESET_GPIO, button_reset_isr);
     // Config button for pause
-    esp_rom_gpio_pad_select_gpio(BUTTON_PAUSE_GPIO);
-    ESP_ERROR_CHECK(gpio_set_direction(BUTTON_PAUSE_GPIO, GPIO_MODE_INPUT));
-    ESP_ERROR_CHECK(gpio_set_intr_type(BUTTON_PAUSE_GPIO, GPIO_INTR_POSEDGE));    //Positive edge
-    ESP_ERROR_CHECK(gpio_isr_handler_add(BUTTON_PAUSE_GPIO, button_pause_isr, NULL));
+    gpio_setup_isr(BUTTON_PAUSE_GPIO, button_pause_isr);
 }
