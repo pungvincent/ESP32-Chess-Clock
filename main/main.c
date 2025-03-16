@@ -8,9 +8,11 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "driver/i2c.h"
+#include "freertos/queue.h"
 
 #include "buttons.h"
 #include "i2c-lcd.h"
+#include "menu.h"
 
 //i2c Configuration
 static const char *TAG = "i2c-lcd";
@@ -51,7 +53,9 @@ bool player1_turn = false;
 bool player2_turn = false;  
 
 // Semaphore to synchronize tasks
-SemaphoreHandle_t xSemaphore = NULL;
+SemaphoreHandle_t clk_Semaphore = NULL;
+SemaphoreHandle_t menu_Semaphore = NULL;
+
 
 // Timer variables
 esp_timer_handle_t timer_handle_player1;
@@ -61,6 +65,7 @@ esp_timer_handle_t timer_handle_display;
 //Track Variables
 bool player1_timer_running = false;  // Variable to track if player 1's timer is running
 bool player2_timer_running = false;  // Variable to track if player 2's timer is running
+
 
 // Function to display the remaining time
 void print_time() {
@@ -147,7 +152,8 @@ void player1_task(void* arg) {
                 ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle_player1, 10000));  // Start timer with an interval of 0.01 second (10000 µs)
             }
             // Suspend player 1 task until button press resumes it
-            xSemaphoreTake(xSemaphore, portMAX_DELAY);
+            xSemaphoreTake(clk_Semaphore, portMAX_DELAY);
+
         } else {
             if (player1_timer_running == true)
             {
@@ -171,7 +177,7 @@ void player2_task(void* arg) {
                 ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle_player2, 10000));  // Start timer with an interval of 0.01 second (10000 µs)
             }
             // Suspend player 2 task until button press resumes it
-            xSemaphoreTake(xSemaphore, portMAX_DELAY);
+            xSemaphoreTake(clk_Semaphore, portMAX_DELAY);
         } else {
             if (player2_timer_running == true)
             {
@@ -184,20 +190,99 @@ void player2_task(void* arg) {
     }
 }
 
+QueueHandle_t Menu_cmd_queue;
+menu_state_t menu_state = MENU_SELECT_BLITZ;  // Initialisation de l'état du menu
+input_event_t event;
+
+void menu_task(void *arg) {
+
+    while (1) {
+        if (xQueueReceive(Menu_cmd_queue, &event, portMAX_DELAY) == pdPASS) {
+            switch (event) {
+                case INPUT_UP:
+                    // Navigation ascendante (menu précédent)
+                    if (menu_state > 0) {
+                        menu_state--;  // Incrémentation pour revenir en arrière
+                    } else {
+                        menu_state = MENU_SELECT_BACK;  // Retourner à l'option "back" si on est déjà au début
+                    }
+                    break;
+
+                case INPUT_DOWN:
+                    // Navigation descendante (menu suivant)
+                    if (menu_state < MENU_SELECT_COUNT - 1) {
+                        menu_state++;  // Incrémentation pour aller à l'option suivante
+                    } else {
+                        menu_state = MENU_SELECT_BLITZ;  // Revenir au début si on est à la fin
+                    }
+                    break;
+
+                case INPUT_OK:
+                    // Action à réaliser lors de la validation de l'option sélectionnée
+                    switch (menu_state) {
+                        case MENU_SELECT_BLITZ:
+                            printf("Blitz selected\n");
+                            break;
+                        case MENU_SELECT_RAPID:
+                            printf("Rapid selected\n");
+                            break;
+                        case MENU_SELECT_CLASSICAL:
+                            printf("Classical selected\n");
+                            break;
+                        case MENU_SELECT_FISCHER:
+                            printf("Fischer selected\n");
+                            break;
+                        case MENU_SELECT_BRONSTEIN:
+                            printf("Bronstein selected\n");
+                            break;
+                        case MENU_SELECT_DELAY:
+                            printf("Delay selected\n");
+                            break;
+                        case MENU_SELECT_CUSTOM:
+                            printf("Custom selected\n");
+                            break;
+                        case MENU_SELECT_BACK:
+                            printf("Back selected\n");
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(50)); // Évite la surcharge CPU
+    }
+}
+
 
 
 void app_main() {
 
-    // Initialize semaphore
-    xSemaphore = xSemaphoreCreateBinary();
-    if (xSemaphore == NULL) {
+    // Initialize semaphores
+    clk_Semaphore = xSemaphoreCreateBinary();
+    if (clk_Semaphore == NULL) {
+        ESP_LOGE("app_main", "Failed to create semaphore");
+        return;
+    }
+    menu_Semaphore = xSemaphoreCreateBinary();
+    if (menu_Semaphore == NULL) {
         ESP_LOGE("app_main", "Failed to create semaphore");
         return;
     }
 
+    //Initialize queue
+    Menu_cmd_queue = xQueueCreate(10, sizeof(input_event_t));
+    if (Menu_cmd_queue == NULL) {
+        printf("Failed to create the queue.\n");
+    }
+
+    //i2c init
     ESP_ERROR_CHECK(i2c_master_init());
     ESP_LOGI(TAG, "I2C initialized successfully");
     
+    //lcd init
     lcd_init_player1();
     lcd_clear_player1();
     lcd_init_player2();
@@ -208,8 +293,9 @@ void app_main() {
     init_timer();
 
     // Create tasks for each player
-    xTaskCreate(player1_task, "player1_task", 2048, NULL, 5, NULL);
-    xTaskCreate(player2_task, "player2_task", 2048, NULL, 5, NULL);
+    xTaskCreate(player1_task, "player1_task", 4096, NULL, 5, NULL);
+    xTaskCreate(player2_task, "player2_task", 4096, NULL, 5, NULL);
+    xTaskCreate(menu_task, "menu_task", 4096, NULL, 5, NULL);
 
     //Start display timer (interval of 1 second)
     if (!esp_timer_is_active(timer_handle_display)) {
