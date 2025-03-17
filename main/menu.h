@@ -3,6 +3,11 @@
 
 //Menu config
 typedef enum {
+    MENU_CLOSED,
+    MENU_OPEN
+} menu_state_t;
+
+typedef enum {
     MENU_SELECT_BLITZ,
     MENU_SELECT_RAPID,
     MENU_SELECT_CLASSICAL,
@@ -11,8 +16,8 @@ typedef enum {
     MENU_SELECT_DELAY,
     MENU_SELECT_CUSTOM,
     MENU_SELECT_BACK,
-    MENU_SELECT_COUNT // Ce compteur permet de connaître le nombre total de menus
-} menu_state_t;
+    MENU_SELECT_COUNT // counter for the menu cursor
+} menu_options_t;
 
 typedef enum {
     INPUT_UP,    

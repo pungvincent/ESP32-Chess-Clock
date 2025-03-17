@@ -191,68 +191,79 @@ void player2_task(void* arg) {
 }
 
 QueueHandle_t Menu_cmd_queue;
-menu_state_t menu_state = MENU_SELECT_BLITZ;  // Initialisation de l'état du menu
+menu_options_t menu_options = MENU_SELECT_BLITZ;
+menu_state_t menu_state = MENU_CLOSED;
 input_event_t event;
 
 void menu_task(void *arg) {
-
     while (1) {
         if (xQueueReceive(Menu_cmd_queue, &(event), (TickType_t) 5)) {
             switch (event) {
+                //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
                 case INPUT_UP:
-                    // Navigation ascendante (menu précédent)
-                    if (menu_state > 0) {
-                        menu_state--;  // Incrémentation pour revenir en arrière
+                    if (menu_options > 0) {
+                        menu_options--;  // Previous option
                     } else {
-                        menu_state = MENU_SELECT_BACK;  // Retourner à l'option "back" si on est déjà au début
+                        menu_options = MENU_SELECT_BACK;  // looping
                     }
                     break;
-
+                //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
                 case INPUT_DOWN:
-                    // Navigation descendante (menu suivant)
-                    if (menu_state < MENU_SELECT_COUNT - 1) {
-                        menu_state++;  // Incrémentation pour aller à l'option suivante
+                    if (menu_options < MENU_SELECT_COUNT - 1) {
+                        menu_options++;  // Next option
                     } else {
-                        menu_state = MENU_SELECT_BLITZ;  // Revenir au début si on est à la fin
+                        menu_options = MENU_SELECT_BLITZ;  // looping
                     }
                     break;
-
+                // Two behaviors : if menu not open -> open menu button / if menu open -> ok button 
                 case INPUT_OK:
-                    // Action à réaliser lors de la validation de l'option sélectionnée
                     switch (menu_state) {
-                        case MENU_SELECT_BLITZ:
-                            printf("Blitz selected\n");
+                        case MENU_CLOSED:
+                            menu_state = MENU_OPEN; //If the menu is closed, then open it
+                            menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
+                            printf("Menu opened\n");
+                                //Display the menu
                             break;
-                        case MENU_SELECT_RAPID:
-                            printf("Rapid selected\n");
-                            break;
-                        case MENU_SELECT_CLASSICAL:
-                            printf("Classical selected\n");
-                            break;
-                        case MENU_SELECT_FISCHER:
-                            printf("Fischer selected\n");
-                            break;
-                        case MENU_SELECT_BRONSTEIN:
-                            printf("Bronstein selected\n");
-                            break;
-                        case MENU_SELECT_DELAY:
-                            printf("Delay selected\n");
-                            break;
-                        case MENU_SELECT_CUSTOM:
-                            printf("Custom selected\n");
-                            break;
-                        case MENU_SELECT_BACK:
-                            printf("Back selected\n");
-                            break;
-                        default:
-                            break;
+                        case MENU_OPEN:
+                            switch (menu_options) {
+                                case MENU_SELECT_BLITZ:
+                                    printf("Blitz selected\n");
+                                    break;
+                                case MENU_SELECT_RAPID:
+                                    printf("Rapid selected\n");
+                                    break;
+                                case MENU_SELECT_CLASSICAL:
+                                    printf("Classical selected\n");
+                                    break;
+                                case MENU_SELECT_FISCHER:
+                                    printf("Fischer selected\n");
+                                    break;
+                                case MENU_SELECT_BRONSTEIN:
+                                    printf("Bronstein selected\n");
+                                    break;
+                                case MENU_SELECT_DELAY:
+                                    printf("Delay selected\n");
+                                    break;
+                                case MENU_SELECT_CUSTOM:
+                                    printf("Custom selected\n");
+                                    break;
+                                case MENU_SELECT_BACK:
+                                    menu_state = MENU_CLOSED;
+                                    printf("Back selected\n");
+                                    printf("Return to Clock!\n");
+                                        //Display clk
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;  
                     }
                     break;
                 default:
                     break;
             }
         }
-        vTaskDelay(pdMS_TO_TICKS(50)); // Évite la surcharge CPU
+        vTaskDelay(pdMS_TO_TICKS(50)); 
     }
 }
 
