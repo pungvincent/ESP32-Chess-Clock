@@ -197,7 +197,7 @@ input_event_t event;
 void menu_task(void *arg) {
 
     while (1) {
-        if (xQueueReceive(Menu_cmd_queue, &event, portMAX_DELAY) == pdPASS) {
+        if (xQueueReceive(Menu_cmd_queue, &(event), (TickType_t) 5)) {
             switch (event) {
                 case INPUT_UP:
                     // Navigation ascendante (menu précédent)
@@ -295,7 +295,7 @@ void app_main() {
     // Create tasks for each player
     xTaskCreate(player1_task, "player1_task", 4096, NULL, 5, NULL);
     xTaskCreate(player2_task, "player2_task", 4096, NULL, 5, NULL);
-    xTaskCreate(menu_task, "menu_task", 4096, NULL, 5, NULL);
+    xTaskCreatePinnedToCore(menu_task, "menu_task", 4096, NULL, 10, NULL, 1);
 
     //Start display timer (interval of 1 second)
     if (!esp_timer_is_active(timer_handle_display)) {

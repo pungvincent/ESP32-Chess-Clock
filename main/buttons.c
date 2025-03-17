@@ -30,7 +30,6 @@ extern SemaphoreHandle_t clk_Semaphore;
 extern SemaphoreHandle_t menu_Semaphore;
 extern QueueHandle_t Menu_cmd_queue;
 extern menu_state_t state;
-extern input_event_t event;
 
 // Function to configure the buttons with interrupts
 void IRAM_ATTR button_player1_isr(void* arg) {
@@ -69,30 +68,18 @@ void IRAM_ATTR button_pause_isr(void* arg) {
 }
 
 void IRAM_ATTR button_minus_isr(void* arg) {
-    event = INPUT_DOWN;
-    if (xQueueSendFromISR(Menu_cmd_queue, &event, NULL) != pdPASS) {
-        printf("Failed to send event to queue\n");
-    } else {
-        printf("Event sent to queue\n");
-    }
+    input_event_t event_down = INPUT_DOWN;
+    xQueueSendFromISR(Menu_cmd_queue, &event_down, (TickType_t) 0);
 }
 
 void IRAM_ATTR button_plus_isr(void* arg) {
-    event = INPUT_UP;
-    if (xQueueSendFromISR(Menu_cmd_queue, &event, NULL)!= pdPASS) {
-        printf("Failed to send event to queue\n");
-    } else {
-        printf("Event sent to queue\n");
-    }
+    input_event_t event_up = INPUT_UP;
+    xQueueSendFromISR(Menu_cmd_queue, &event_up, (TickType_t) 0);
 }
 
-void IRAM_ATTR button_menu_isr(void* arg) {
-    event = INPUT_OK;
-    if (xQueueSendFromISR(Menu_cmd_queue, &event, NULL) != pdPASS) {
-        printf("Failed to send event to queue\n");
-    } else {
-        printf("Event sent to queue\n");
-    }
+void IRAM_ATTR button_menu_isr(void* arg) { 
+    input_event_t event_ok = INPUT_OK;
+    xQueueSendFromISR(Menu_cmd_queue, &event_ok, (TickType_t) 0);
 
 }
 
