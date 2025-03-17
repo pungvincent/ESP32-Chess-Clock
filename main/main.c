@@ -43,10 +43,14 @@ static esp_err_t i2c_master_init(void)
     return i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
 
-// Initial time for each player (3 minutes = 180 seconds)
-const int PLAYER_TIME = 180;
-int player1_time = PLAYER_TIME*100;  //Convert to hundredth of a second
-int player2_time = PLAYER_TIME*100;  //Convert to hundredth of a second
+// Initial time for each player (3 minutes = 180 seconds and increment time = 2 seconds)
+int PLAYER_TIME = 180;
+int PLAYER_INC = 2;
+int player1_time;        
+int player2_time;       
+int player1_inc;       
+int player2_inc;     
+
 
 //Turn flag
 bool player1_turn = false;
@@ -54,8 +58,6 @@ bool player2_turn = false;
 
 // Semaphore to synchronize tasks
 SemaphoreHandle_t clk_Semaphore = NULL;
-SemaphoreHandle_t menu_Semaphore = NULL;
-
 
 // Timer variables
 esp_timer_handle_t timer_handle_player1;
@@ -66,6 +68,13 @@ esp_timer_handle_t timer_handle_display;
 bool player1_timer_running = false;  // Variable to track if player 1's timer is running
 bool player2_timer_running = false;  // Variable to track if player 2's timer is running
 
+
+void initialize_times() {
+    player1_time = PLAYER_TIME * 100;  //Convert to hundredth of a second
+    player2_time = PLAYER_TIME * 100; 
+    player1_inc = PLAYER_INC * 100;    
+    player2_inc = PLAYER_INC * 100;  
+}
 
 // Function to display the remaining time
 void print_time() {
@@ -221,31 +230,45 @@ void menu_task(void *arg) {
                         case MENU_CLOSED:
                             menu_state = MENU_OPEN; //If the menu is closed, then open it
                             menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
+                            pause_clk();
                             printf("Menu opened\n");
                                 //Display the menu
                             break;
                         case MENU_OPEN:
                             switch (menu_options) {
                                 case MENU_SELECT_BLITZ:
+                                    menu_state = MENU_CLOSED;
                                     printf("Blitz selected\n");
+                                    printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_RAPID:
+                                    menu_state = MENU_CLOSED;
                                     printf("Rapid selected\n");
+                                    printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_CLASSICAL:
+                                    menu_state = MENU_CLOSED;
                                     printf("Classical selected\n");
+                                    printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_FISCHER:
+                                    menu_state = MENU_CLOSED;
                                     printf("Fischer selected\n");
+                                    printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_BRONSTEIN:
+                                    menu_state = MENU_CLOSED;
                                     printf("Bronstein selected\n");
+                                    printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_DELAY:
+                                    menu_state = MENU_CLOSED;
                                     printf("Delay selected\n");
+                                    printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_CUSTOM:
                                     printf("Custom selected\n");
+                                    printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_BACK:
                                     menu_state = MENU_CLOSED;
@@ -271,14 +294,12 @@ void menu_task(void *arg) {
 
 void app_main() {
 
-    // Initialize semaphores
+    //Init times values
+    initialize_times();
+
+    // Initialize semaphore
     clk_Semaphore = xSemaphoreCreateBinary();
     if (clk_Semaphore == NULL) {
-        ESP_LOGE("app_main", "Failed to create semaphore");
-        return;
-    }
-    menu_Semaphore = xSemaphoreCreateBinary();
-    if (menu_Semaphore == NULL) {
         ESP_LOGE("app_main", "Failed to create semaphore");
         return;
     }

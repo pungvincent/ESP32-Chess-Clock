@@ -25,6 +25,7 @@ typedef enum {
     INPUT_OK,   
 } input_event_t;
 
-
+void pause_clk();
+void reset_clk();
 
 #endif 
