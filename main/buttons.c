@@ -22,12 +22,13 @@
 #define ESP_INR_FLAG_DEFAULT 0
 
 //extern variables in main.c
-extern const int PLAYER_TIME;
-extern const int PLAYER_INC;
+extern int PLAYER_TIME;
+extern int PLAYER_INC;
 extern int player1_time;
 extern int player2_time;  
 extern int player1_inc; 
 extern int player2_inc;  
+
 //Turn flag
 extern bool player1_turn;
 extern bool player2_turn;  

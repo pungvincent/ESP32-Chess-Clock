@@ -8,12 +8,13 @@
 #include "menu.h"
 
 //extern variables
-extern const int PLAYER_TIME;
-extern const int PLAYER_INC;
+extern int PLAYER_TIME;
+extern int PLAYER_INC;
 extern int player1_time;
 extern int player2_time;  
 extern int player1_inc; 
 extern int player2_inc;  
+
 //Turn flag
 extern bool player1_turn;
 extern bool player2_turn;  
@@ -39,5 +40,14 @@ void reset_clk() {
     player2_inc = PLAYER_INC*100;  
     // Give the semaphore to resume the corresponding task
     xSemaphoreGive(clk_Semaphore);
+}
+
+void set_clk_settings(int p_time, int i_time) {
+    PLAYER_TIME= p_time;
+    PLAYER_INC = i_time;
+    player1_time = PLAYER_TIME*100;  //Convert to hundredth of a second
+    player2_time = PLAYER_TIME*100; 
+    player1_inc = PLAYER_INC*100;  
+    player2_inc = PLAYER_INC*100;  
 }
 

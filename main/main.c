@@ -49,8 +49,7 @@ int PLAYER_INC = 2;
 int player1_time;        
 int player2_time;       
 int player1_inc;       
-int player2_inc;     
-
+int player2_inc;   
 
 //Turn flag
 bool player1_turn = false;
@@ -237,42 +236,38 @@ void menu_task(void *arg) {
                         case MENU_OPEN:
                             switch (menu_options) {
                                 case MENU_SELECT_BLITZ:
-                                    menu_state = MENU_CLOSED;
+                                    set_clk_settings(180,2);
                                     printf("Blitz selected\n");
+                                    menu_state = MENU_CLOSED;
+                                    printf("Return to Clock!\n");
+                                    break;
+                                case MENU_SELECT_BULLET:
+                                    set_clk_settings(60,1);
+                                    printf("Rapid selected\n");
+                                    menu_state = MENU_CLOSED;
                                     printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_RAPID:
-                                    menu_state = MENU_CLOSED;
+                                    set_clk_settings(600,0);
                                     printf("Rapid selected\n");
+                                    menu_state = MENU_CLOSED;
                                     printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_CLASSICAL:
+                                    set_clk_settings(3600,30);
+                                    printf("Classical selected\n");    
                                     menu_state = MENU_CLOSED;
-                                    printf("Classical selected\n");
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_FISCHER:
-                                    menu_state = MENU_CLOSED;
-                                    printf("Fischer selected\n");
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_BRONSTEIN:
-                                    menu_state = MENU_CLOSED;
-                                    printf("Bronstein selected\n");
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_DELAY:
-                                    menu_state = MENU_CLOSED;
-                                    printf("Delay selected\n");
                                     printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_CUSTOM:
-                                    printf("Custom selected\n");
+                                    set_clk_settings(0,0);
+                                    printf("Custom selected\n");    
+                                    menu_state = MENU_CLOSED;
                                     printf("Return to Clock!\n");
                                     break;
                                 case MENU_SELECT_BACK:
-                                    menu_state = MENU_CLOSED;
                                     printf("Back selected\n");
+                                    menu_state = MENU_CLOSED;
                                     printf("Return to Clock!\n");
                                         //Display clk
                                     break;

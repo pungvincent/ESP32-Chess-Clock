@@ -9,11 +9,9 @@ typedef enum {
 
 typedef enum {
     MENU_SELECT_BLITZ,
+    MENU_SELECT_BULLET,
     MENU_SELECT_RAPID,
     MENU_SELECT_CLASSICAL,
-    MENU_SELECT_FISCHER,
-    MENU_SELECT_BRONSTEIN,
-    MENU_SELECT_DELAY,
     MENU_SELECT_CUSTOM,
     MENU_SELECT_BACK,
     MENU_SELECT_COUNT // counter for the menu cursor
@@ -27,5 +25,6 @@ typedef enum {
 
 void pause_clk();
 void reset_clk();
+void set_clk_settings(int p_time, int i_time);
 
 #endif 
