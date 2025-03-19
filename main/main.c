@@ -67,6 +67,10 @@ esp_timer_handle_t timer_handle_display;
 bool player1_timer_running = false;  // Variable to track if player 1's timer is running
 bool player2_timer_running = false;  // Variable to track if player 2's timer is running
 
+QueueHandle_t Menu_cmd_queue;
+menu_options_t menu_options = MENU_SELECT_BLITZ;
+menu_state_t menu_state = MENU_CLOSED;
+input_event_t event;
 
 void initialize_times() {
     player1_time = PLAYER_TIME * 100;  //Convert to hundredth of a second
@@ -94,31 +98,33 @@ void player2_timer(void* arg) {
 }
 void display_timer(void* arg) 
 {
-    // Sufficient size to hold concatenated minutes and seconds
-    char min1[10];  // Increase the size of min1
-    char sec1[10];  // Increase the size of sec1
-    char min2[10];  // Increase the size of min2
-    char sec2[10];  // Increase the size of sec2
+    if (menu_state == MENU_CLOSED) {
+        // Sufficient size to hold concatenated minutes and seconds
+        char min1[10];  // Increase the size of min1
+        char sec1[10];  // Increase the size of sec1
+        char min2[10];  // Increase the size of min2
+        char sec2[10];  // Increase the size of sec2
 
-    // Format minutes and seconds for Player 1
-    sprintf(min1, "%02d", player1_time / (60 * 100));  // Minutes
-    sprintf(sec1, "%02d", player1_time / 100 % 60);    // Seconds
-    sprintf(min2, "%02d", player2_time / (60 * 100));  // Minutes
-    sprintf(sec2, "%02d", player2_time / 100 % 60);    // Seconds
+        // Format minutes and seconds for Player 1
+        sprintf(min1, "%02d", player1_time / (60 * 100));  // Minutes
+        sprintf(sec1, "%02d", player1_time / 100 % 60);    // Seconds
+        sprintf(min2, "%02d", player2_time / (60 * 100));  // Minutes
+        sprintf(sec2, "%02d", player2_time / 100 % 60);    // Seconds
 
-    // Concatenate the two strings
-    char time_display1[20];  // Sufficient size to hold both parts
-    strcpy(time_display1, min1);  // Copy min1 into time_display1
-    strcat(time_display1, ":");  // Add a ":" between minutes and seconds
-    strcat(time_display1, sec1);  // Add seconds to time_display1
+        // Concatenate the two strings
+        char time_display1[20];  // Sufficient size to hold both parts
+        strcpy(time_display1, min1);  // Copy min1 into time_display1
+        strcat(time_display1, ":");  // Add a ":" between minutes and seconds
+        strcat(time_display1, sec1);  // Add seconds to time_display1
 
-    char time_display2[20];  // Sufficient size to hold both parts
-    strcpy(time_display2, min2);  // Copy min2 into time_display2
-    strcat(time_display2, ":");  // Add a ":" between minutes and seconds
-    strcat(time_display2, sec2);  // Add seconds to time_display2
+        char time_display2[20];  // Sufficient size to hold both parts
+        strcpy(time_display2, min2);  // Copy min2 into time_display2
+        strcat(time_display2, ":");  // Add a ":" between minutes and seconds
+        strcat(time_display2, sec2);  // Add seconds to time_display2
 
-    //Display the result in the LCD Display;
-    lcd_display_chess_counter(time_display1, time_display2);
+        //Display the result in the LCD Display;
+        lcd_display_chess_counter(time_display1, time_display2);
+    }
     
 }
 
@@ -198,17 +204,13 @@ void player2_task(void* arg) {
     }
 }
 
-QueueHandle_t Menu_cmd_queue;
-menu_options_t menu_options = MENU_SELECT_BLITZ;
-menu_state_t menu_state = MENU_CLOSED;
-input_event_t event;
 
 void menu_task(void *arg) {
     while (1) {
         if (xQueueReceive(Menu_cmd_queue, &(event), (TickType_t) 5)) {
             switch (event) {
                 //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
-                case INPUT_UP:
+                case INPUT_DOWN:
                     if (menu_options > 0) {
                         menu_options--;  // Previous option
                     } else {
@@ -216,9 +218,10 @@ void menu_task(void *arg) {
                     }
                     break;
                 //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
-                case INPUT_DOWN:
+                case INPUT_UP:
                     if (menu_options < MENU_SELECT_COUNT - 1) {
                         menu_options++;  // Next option
+
                     } else {
                         menu_options = MENU_SELECT_BLITZ;  // looping
                     }
@@ -227,6 +230,9 @@ void menu_task(void *arg) {
                 case INPUT_OK:
                     switch (menu_state) {
                         case MENU_CLOSED:
+                            //When menu_state change, clear the screen once
+                            lcd_clear_player1 ();
+                            lcd_clear_player2 ();
                             menu_state = MENU_OPEN; //If the menu is closed, then open it
                             menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
                             pause_clk();
@@ -234,6 +240,9 @@ void menu_task(void *arg) {
                                 //Display the menu
                             break;
                         case MENU_OPEN:
+                            //When menu_state change, clear the screen once
+                            lcd_clear_player1 ();
+                            lcd_clear_player2 ();
                             switch (menu_options) {
                                 case MENU_SELECT_BLITZ:
                                     set_clk_settings(180,2);

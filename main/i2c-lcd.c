@@ -1,11 +1,12 @@
 
 /** Put this in the src folder **/
 #include <stdint.h>
-
 #include "i2c-lcd.h"
 #include "esp_log.h"
 #include "driver/i2c.h"
 #include "unistd.h"
+
+#include "menu.h"
 
 #define SLAVE_ADDRESS_LCD_player1 0x4E>>1 //change this according to your setup
 #define SLAVE_ADDRESS_LCD_player2 0x4C>>1 //Player_1: 0x27 and player2: 0x26
@@ -166,4 +167,21 @@ void lcd_display_chess_counter(char time_display1[], char time_display2[]) {
 	lcd_send_string_player2("Player 2 time:");
 	lcd_put_cur_player2(1, 5);
 	lcd_send_string_player2(time_display2);
+}
+
+void lcd_display_menu() {
+	//Display the counter on player's 1 display
+	lcd_put_cur_player1(0, 1);
+	lcd_send_string_player1("Blitz");
+	lcd_put_cur_player1(0, 8);
+	lcd_send_string_player1("Bullet");
+	lcd_put_cur_player1(1, 1);
+	lcd_send_string_player1("Rapid");
+	lcd_put_cur_player1(1, 8);
+	lcd_send_string_player1("Classic");
+	//Display the counter on player's 2 display
+	lcd_put_cur_player2(0, 1);
+	lcd_send_string_player2("Custom");
+	lcd_put_cur_player2(0, 9);
+	lcd_send_string_player2("Back");
 }

@@ -15,3 +15,4 @@ void lcd_clear_player2 (void);
 
 //Display the counter for both displays
 void lcd_display_chess_counter(char time_display1[], char time_display2[]);
+void lcd_display_menu();
