@@ -204,10 +204,20 @@ void player2_task(void* arg) {
     }
 }
 
+const uint8_t positions[][3] = {
+    {0, 0, 1}, // MENU_SELECT_BLITZ
+    {0, 7, 1}, // MENU_SELECT_BULLET
+    {1, 0, 1}, // MENU_SELECT_RAPID
+    {1, 7, 1}, // MENU_SELECT_CLASSICAL
+    {0, 0, 2}, // MENU_SELECT_CUSTOM
+    {0, 8, 2}  // MENU_SELECT_BACK
+};
 
 void menu_task(void *arg) {
     while (1) {
         if (xQueueReceive(Menu_cmd_queue, &(event), (TickType_t) 5)) {
+            lcd_clear_player1 (); lcd_clear_player2 ();
+            lcd_display_menu();
             switch (event) {
                 //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
                 case INPUT_DOWN:
@@ -216,6 +226,21 @@ void menu_task(void *arg) {
                     } else {
                         menu_options = MENU_SELECT_BACK;  // looping
                     }
+
+
+
+                    if (menu_options >= MENU_SELECT_BLITZ && menu_options <= MENU_SELECT_BACK) {
+                        if (positions[menu_options][2] == 1)
+                            lcd_put_cur_player1(positions[menu_options][0], positions[menu_options][1]);
+                        else
+                            lcd_put_cur_player2(positions[menu_options][0], positions[menu_options][1]);
+
+                        (positions[menu_options][2] == 1 ? lcd_send_string_player1 : lcd_send_string_player2)(">");
+                    }
+
+                    
+
+                    
                     break;
                 //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
                 case INPUT_UP:
@@ -225,63 +250,62 @@ void menu_task(void *arg) {
                     } else {
                         menu_options = MENU_SELECT_BLITZ;  // looping
                     }
+
+
+
+
+                    if (menu_options >= MENU_SELECT_BLITZ && menu_options <= MENU_SELECT_BACK) {
+                        if (positions[menu_options][2] == 1)
+                            lcd_put_cur_player1(positions[menu_options][0], positions[menu_options][1]);
+                        else
+                            lcd_put_cur_player2(positions[menu_options][0], positions[menu_options][1]);
+
+                        (positions[menu_options][2] == 1 ? lcd_send_string_player1 : lcd_send_string_player2)(">");
+                    }
+
+
+
+
                     break;
                 // Two behaviors : if menu not open -> open menu button / if menu open -> ok button 
                 case INPUT_OK:
                     switch (menu_state) {
                         case MENU_CLOSED:
-                            //When menu_state change, clear the screen once
-                            lcd_clear_player1 ();
-                            lcd_clear_player2 ();
+                            ////When menu_state change, clear the screen once
                             menu_state = MENU_OPEN; //If the menu is closed, then open it
                             menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
+                            lcd_put_cur_player1(0, 0); lcd_send_string_player1(">");//Menu is displayed but we need to set the cursor manually
                             pause_clk();
                             printf("Menu opened\n");
                                 //Display the menu
                             break;
                         case MENU_OPEN:
-                            //When menu_state change, clear the screen once
-                            lcd_clear_player1 ();
-                            lcd_clear_player2 ();
+                            //Custom option
+                            if (menu_options == MENU_SELECT_CUSTOM) {
+                                printf("Custom selected\n");
+                                // open new window here
+                                return;
+                            }
+                            
+                            //Preconfig options
                             switch (menu_options) {
-                                case MENU_SELECT_BLITZ:
-                                    set_clk_settings(180,2);
-                                    printf("Blitz selected\n");
-                                    menu_state = MENU_CLOSED;
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_BULLET:
-                                    set_clk_settings(60,1);
-                                    printf("Rapid selected\n");
-                                    menu_state = MENU_CLOSED;
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_RAPID:
-                                    set_clk_settings(600,0);
-                                    printf("Rapid selected\n");
-                                    menu_state = MENU_CLOSED;
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_CLASSICAL:
-                                    set_clk_settings(3600,30);
-                                    printf("Classical selected\n");    
-                                    menu_state = MENU_CLOSED;
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_CUSTOM:
-                                    set_clk_settings(0,0);
-                                    printf("Custom selected\n");    
-                                    menu_state = MENU_CLOSED;
-                                    printf("Return to Clock!\n");
-                                    break;
-                                case MENU_SELECT_BACK:
-                                    printf("Back selected\n");
-                                    menu_state = MENU_CLOSED;
-                                    printf("Return to Clock!\n");
-                                        //Display clk
-                                    break;
-                                default:
-                                    break;
+                                case MENU_SELECT_BLITZ:      set_clk_settings(180, 2);   break;
+                                case MENU_SELECT_BULLET:     set_clk_settings(60, 1);    break;
+                                case MENU_SELECT_RAPID:      set_clk_settings(600, 0);   break;
+                                case MENU_SELECT_CLASSICAL:  set_clk_settings(3600, 30); break;
+                                case MENU_SELECT_BACK:       printf("Back selected\n");  break;
+                                default: return;
+                            }
+                            printf("%s selected\n", 
+                                menu_options == MENU_SELECT_BLITZ ? "Blitz" :
+                                menu_options == MENU_SELECT_BULLET ? "Bullet" :
+                                menu_options == MENU_SELECT_RAPID ? "Rapid" :
+                                menu_options == MENU_SELECT_CLASSICAL ? "Classical" : "");
+                                
+                            if (menu_options != MENU_SELECT_CUSTOM) {
+                                menu_state = MENU_CLOSED;
+                                lcd_clear_player1 (); lcd_clear_player2 ();
+                                printf("Returning to Clock\n");
                             }
                             break;  
                     }
