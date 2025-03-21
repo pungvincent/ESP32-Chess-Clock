@@ -128,8 +128,6 @@ void display_timer(void* arg)
     
 }
 
-
-
 // Timer initialization function
 void init_timer() {
     esp_timer_create_args_t timer_args_player1 = {
@@ -204,78 +202,46 @@ void player2_task(void* arg) {
     }
 }
 
-const uint8_t positions[][3] = {
-    {0, 0, 1}, // MENU_SELECT_BLITZ
-    {0, 7, 1}, // MENU_SELECT_BULLET
-    {1, 0, 1}, // MENU_SELECT_RAPID
-    {1, 7, 1}, // MENU_SELECT_CLASSICAL
-    {0, 0, 2}, // MENU_SELECT_CUSTOM
-    {0, 8, 2}  // MENU_SELECT_BACK
-};
+
 
 void menu_task(void *arg) {
     while (1) {
         if (xQueueReceive(Menu_cmd_queue, &(event), (TickType_t) 5)) {
-            lcd_clear_player1 (); lcd_clear_player2 ();
-            lcd_display_menu();
             switch (event) {
                 //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
                 case INPUT_DOWN:
-                    if (menu_options > 0) {
-                        menu_options--;  // Previous option
-                    } else {
-                        menu_options = MENU_SELECT_BACK;  // looping
+                    if (menu_state == MENU_OPEN) {
+                        if (menu_options > 0) {
+                            menu_options--;  // Previous option
+                        } else {
+                            menu_options = MENU_SELECT_BACK;  // looping
+                        }
+                        //Move the cursor to the left
+                        display_menu_cursor(menu_options);
                     }
-
-
-
-                    if (menu_options >= MENU_SELECT_BLITZ && menu_options <= MENU_SELECT_BACK) {
-                        if (positions[menu_options][2] == 1)
-                            lcd_put_cur_player1(positions[menu_options][0], positions[menu_options][1]);
-                        else
-                            lcd_put_cur_player2(positions[menu_options][0], positions[menu_options][1]);
-
-                        (positions[menu_options][2] == 1 ? lcd_send_string_player1 : lcd_send_string_player2)(">");
-                    }
-
-                    
-
-                    
                     break;
                 //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
                 case INPUT_UP:
-                    if (menu_options < MENU_SELECT_COUNT - 1) {
-                        menu_options++;  // Next option
+                    if (menu_state == MENU_OPEN) {
+                        if (menu_options < MENU_SELECT_COUNT - 1) {
+                            menu_options++;  // Next option
 
-                    } else {
-                        menu_options = MENU_SELECT_BLITZ;  // looping
+                        } else {
+                            menu_options = MENU_SELECT_BLITZ;  // looping
+                        }
+                        //Move the cursor to the right
+                        display_menu_cursor(menu_options);
                     }
-
-
-
-
-                    if (menu_options >= MENU_SELECT_BLITZ && menu_options <= MENU_SELECT_BACK) {
-                        if (positions[menu_options][2] == 1)
-                            lcd_put_cur_player1(positions[menu_options][0], positions[menu_options][1]);
-                        else
-                            lcd_put_cur_player2(positions[menu_options][0], positions[menu_options][1]);
-
-                        (positions[menu_options][2] == 1 ? lcd_send_string_player1 : lcd_send_string_player2)(">");
-                    }
-
-
-
-
                     break;
                 // Two behaviors : if menu not open -> open menu button / if menu open -> ok button 
                 case INPUT_OK:
                     switch (menu_state) {
                         case MENU_CLOSED:
-                            ////When menu_state change, clear the screen once
+                            pause_clk();
                             menu_state = MENU_OPEN; //If the menu is closed, then open it
                             menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
-                            lcd_put_cur_player1(0, 0); lcd_send_string_player1(">");//Menu is displayed but we need to set the cursor manually
-                            pause_clk();
+                            //display menu and display the cursor at blitz
+                            display_menu_cursor(menu_options);
                             printf("Menu opened\n");
                                 //Display the menu
                             break;

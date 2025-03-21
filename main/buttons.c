@@ -34,7 +34,6 @@ extern bool player1_turn;
 extern bool player2_turn;  
 // Semaphore to synchronize tasks
 extern SemaphoreHandle_t clk_Semaphore;
-extern SemaphoreHandle_t menu_Semaphore;
 //Queue
 extern QueueHandle_t Menu_cmd_queue;
 extern menu_state_t state;

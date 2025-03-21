@@ -26,5 +26,6 @@ typedef enum {
 void pause_clk();
 void reset_clk();
 void set_clk_settings(int p_time, int i_time);
+void display_menu_cursor(menu_options_t menu_options);
 
 #endif 
