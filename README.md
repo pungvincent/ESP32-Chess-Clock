@@ -1,11 +1,29 @@
 # ESP32-Chess-Clock
 ESP32-based chess clock using ESP-IDF.
 
-# Version 2.1
-The timer is set up at 3 minutes (Blitz) and it displays the time remaining for each player on the serial monitor each hundredth of seconds and each second on 2 LCD screens 16x2 for each player. This version implements two buttons (one for each player), a pause button, and a reset button.
+# Version 2.2
 
-## Improvement
-- Added a second LCD screen
+This project consists of a dual LCD screen displaying the time counter for each player. When the clock starts, it defaults to a 3-minute timer with an increment of 2 seconds per move.
+
+Several buttons are available to control the clock:
+|Reset|Pause|Player1|Player2|-|+|menu/ok|
+|-----|-----|-------|-------|-|-|-------|
+
+The menu offers different presets:
+- BLITZ
+- BULLET
+- RAPID
+- CLASSICAL
+- CUSTOM
+- BACK
+
+<u>Note</u>: These presets are not strictly representative of standard time settings and increments, as they may vary depending on the players or their preferences.
+
+## Future Improvement
+
+- The custom preset has not been implemented yet. When selected, the system crashes and reboots.
+- add an incremental rotary encoder
+- add a buzzer
 
 ## Code
 
@@ -22,13 +40,6 @@ Here is the current configuration:
 |------|----|----|----|-------------|--------------|
 | 0100 |  1 |  1 |  1 | 0x27        | Player 1 LCD |
 | 0100 |  1 |  1 |  0 | 0x26        | Player 2 LCD |
-
-## Future improvement
-
-- change the timer count
-- add an incremental rotary encoder
-- make a menu 
-- add a buzzer
 
 # Resources
 This project uses the following tutorial for driving the 16x2 LCD display:
