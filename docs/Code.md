@@ -48,10 +48,10 @@
 |`void lcd_send_string_player2 (char *str)`|Displays a string on Player 2's LCD.|
 |`void lcd_put_cur_player1(int row, int col)`|Moves the cursor to a specific position on Player 1's LCD.|
 |`void lcd_put_cur_player2(int row, int col)`|Moves the cursor to a specific position on Player 2's LCD.|
-|`void lcd_clear_player1 (void)`|Clears the LCD screen for Player 1.|
-|`void lcd_clear_player2 (void)`|Clears the LCD screen for Player 2.|
-|`void lcd_display_chess_counter(char time_display1[], char time_display2[])`|Displays the chess timer values for both players on their respective LCDs.|
-|`void lcd_display_menu()`| Displays all presets on the menu |
+|`void lcd_clear_player1 (void)`|Clears the LCD screen for Player 1. |
+|`void lcd_clear_player2 (void)`|Clears the LCD screen for Player 2. |
+|`void lcd_display_chess_counter(char time_display1[], char time_display2[])`|Displays the chess timer values for both players on their respective LCDs. |
+|`void lcd_display_menu()`| Displays all presets on the menu. |
 
 # Menu
 
