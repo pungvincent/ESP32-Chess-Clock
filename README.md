@@ -9,6 +9,10 @@ Several buttons are available to control the clock:
 |Reset|Pause|Player1|Player2|-|+|menu/ok|
 |-----|-----|-------|-------|-|-|-------|
 
+This picture shows the prototyping process. I use TTP223 capacitive touch sensors instead of generic push buttons, but you can always use regular buttons with pull-up resistors.
+
+<img src="docs/images/Clock.jpg" alt="I2C_2" width="400" height="250">
+
 The menu offers different presets:
 - BLITZ
 - BULLET
@@ -19,15 +23,51 @@ The menu offers different presets:
 
 <u>Note</u>: These presets are not strictly representative of standard time settings and increments, as they may vary depending on the players or their preferences.
 
+The blue screen is a bit difficult to make out in the photo, as it's not very clear what's displayed on it, but here's a picture:
+
+<img src="docs/images/Menu.jpg" alt="I2C_2" width="400" height="250">
+
 ## Future Improvement
 
 - The custom preset has not been implemented yet. When selected, the system crashes and reboots.
-- add an incremental rotary encoder
+- add an incremental rotary encoder instead of buttons
 - add a buzzer
 
 ## Code
 
 Further explication of the code can be found [here](docs/Code.md).
+
+# Installation
+
+## ESP-IDF
+
+I use a generic esp32 for this project.
+
+1. You need `esp-idf` installed and configured in your system before using this project.
+2. Navigate to your project directory, or clone a sample project from the ESP-IDF examples:
+
+```bash
+# Navigate to your project directory
+cd ~/my_project
+# Clone the project
+git clone --recursive https://github.com/pungvincent/ESP32-Chess-Clock.git
+cd ESP32-Chess-Clock
+```
+
+3. Build your project: `idf.py build`
+4. Flash the firmware to the ESP32: `idf.py -p /dev/ttyUSB0 flash`
+
+<u>Important Note</u>:
+```
+Ensure that /dev/ttyUSB0 is the correct serial port for your device. On Linux/macOS, you can check the port by running ls /dev/tty* before and after plugging in the ESP32. On Windows, it may appear as COMx (e.g., COM3).
+If the serial port is different from /dev/ttyUSB0, replace it with the correct port (e.g., /dev/ttyACM0, COM3, etc.).
+```
+
+5. Monitor the ESP32 output: `idf.py -p /dev/ttyUSB0 monitor`
+
+**Optional**:
+- Clean your project: `idf.py fullclean`
+- Reset the ESP32: `idf.py -p /dev/ttyUSB0 reset`
 
 ## LCD 16x2 screen
 
