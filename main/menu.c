@@ -9,12 +9,12 @@
 #include "i2c-lcd.h"
 
 //extern variables
-extern int PLAYER_TIME;
-extern int PLAYER_INC;
-extern int player1_time;
-extern int player2_time;  
-extern int player1_inc; 
-extern int player2_inc;  
+extern unsigned int PLAYER_TIME;
+extern unsigned int PLAYER_INC;
+extern unsigned int player1_time;
+extern unsigned int player2_time;  
+extern unsigned int player1_inc; 
+extern unsigned int player2_inc;  
 
 //Turn flag
 extern bool player1_turn;
@@ -22,13 +22,23 @@ extern bool player2_turn;
 // Semaphore to synchronize tasks
 extern SemaphoreHandle_t clk_Semaphore;
 
-const uint8_t positions[][3] = {
+const uint8_t menu_positions[][3] = {
     {0, 0, 1}, // MENU_SELECT_BLITZ
     {0, 7, 1}, // MENU_SELECT_BULLET
     {1, 0, 1}, // MENU_SELECT_RAPID
     {1, 7, 1}, // MENU_SELECT_CLASSICAL
     {0, 0, 2}, // MENU_SELECT_CUSTOM
-    {0, 8, 2}  // MENU_SELECT_BACK
+    {0, 8, 2}, // MENU_SELECT_PAUSE
+    {1, 0, 2}, // MENU_SELECT_RESET
+    {1, 8, 2}  // MENU_SELECT_BACK
+};
+
+const uint8_t custom_positions[][3] = {
+    {0, 0, 1}, // CUSTOM_SELECT_TIME
+    {0, 7, 1}, // CUSTOM_SELECT_INC
+    {0, 0, 2}, // CUSTOM_SELECT_CONFIRM
+    {0, 9, 2}, // CUSTOM_SELECT_RESET
+    {1, 0, 2} // CUSTOM_SELECT_BACK
 };
 
 void pause_clk() {
@@ -63,11 +73,23 @@ void set_clk_settings(int p_time, int i_time) {
 void display_menu_cursor(menu_options_t menu_options) {
     lcd_clear_player1 (); lcd_clear_player2 (); lcd_display_menu();
     if (menu_options >= MENU_SELECT_BLITZ && menu_options <= MENU_SELECT_BACK) {
-        if (positions[menu_options][2] == 1)
-            lcd_put_cur_player1(positions[menu_options][0], positions[menu_options][1]);
+        if (menu_positions[menu_options][2] == 1)
+            lcd_put_cur_player1(menu_positions[menu_options][0], menu_positions[menu_options][1]);
         else
-            lcd_put_cur_player2(positions[menu_options][0], positions[menu_options][1]);
+            lcd_put_cur_player2(menu_positions[menu_options][0], menu_positions[menu_options][1]);
 
-        (positions[menu_options][2] == 1 ? lcd_send_string_player1 : lcd_send_string_player2)(">");
+        (menu_positions[menu_options][2] == 1 ? lcd_send_string_player1 : lcd_send_string_player2)(">");
+    }
+}
+
+void display_custom_cursor(custom_options_t custom_options) {
+    lcd_clear_player1 (); lcd_clear_player2 (); lcd_display_custom();
+    if (custom_options >= CUSTOM_SELECT_TIME && custom_options <= CUSTOM_SELECT_BACK) {
+        if (custom_positions[custom_options][2] == 1)
+            lcd_put_cur_player1(custom_positions[custom_options][0], custom_positions[custom_options][1]);
+        else
+            lcd_put_cur_player2(custom_positions[custom_options][0], custom_positions[custom_options][1]);
+
+        (custom_positions[custom_options][2] == 1 ? lcd_send_string_player1 : lcd_send_string_player2)(">");
     }
 }

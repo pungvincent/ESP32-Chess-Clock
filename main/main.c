@@ -44,12 +44,16 @@ static esp_err_t i2c_master_init(void)
 }
 
 // Initial time for each player (3 minutes = 180 seconds and increment time = 2 seconds)
-int PLAYER_TIME = 180;
-int PLAYER_INC = 2;
-int player1_time;        
-int player2_time;       
-int player1_inc;       
-int player2_inc;   
+unsigned int PLAYER_TIME = 180;
+unsigned int PLAYER_INC = 2;
+unsigned int player1_time;        
+unsigned int player2_time;       
+unsigned int player1_inc;       
+unsigned int player2_inc;   
+
+//Custom mode time and increment time
+unsigned int custom_timer;   //in minutes
+unsigned int custom_increment; // in secondes
 
 //Turn flag
 bool player1_turn = false;
@@ -69,7 +73,9 @@ bool player2_timer_running = false;  // Variable to track if player 2's timer is
 
 QueueHandle_t Menu_cmd_queue;
 menu_options_t menu_options = MENU_SELECT_BLITZ;
+custom_options_t custom_options = CUSTOM_SELECT_TIME;
 menu_state_t menu_state = MENU_CLOSED;
+custom_state_t custom_state = CUSTOM_CLOSED;
 input_event_t event;
 
 void initialize_times() {
@@ -98,7 +104,7 @@ void player2_timer(void* arg) {
 }
 void display_timer(void* arg) 
 {
-    if (menu_state == MENU_CLOSED) {
+    if (menu_state == MENU_CLOSED && custom_state == CUSTOM_CLOSED) {
         // Sufficient size to hold concatenated minutes and seconds
         char min1[10];  // Increase the size of min1
         char sec1[10];  // Increase the size of sec1
@@ -208,20 +214,54 @@ void menu_task(void *arg) {
     while (1) {
         if (xQueueReceive(Menu_cmd_queue, &(event), (TickType_t) 5)) {
             switch (event) {
-                //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
-                case INPUT_DOWN:
+                //Buttons for Custom mode
+                case INPUT_MINUS:
+                    if (custom_state == CUSTOM_OPEN) {
+                        if (custom_options == CUSTOM_SELECT_TIME) {
+                            if (custom_timer > 0) 
+                            custom_timer--;
+                        } 
+                        else if (custom_options == CUSTOM_SELECT_INC) {
+                            if (custom_increment > 0) 
+                            custom_increment--;
+                        }
+                        lcd_display_custom_digit(custom_timer, custom_increment);
+                    }
+                    break;
+                case INPUT_PLUS:
+                    if (custom_state == CUSTOM_OPEN) {
+                        if (custom_options == CUSTOM_SELECT_TIME) {
+                            if (custom_timer < 100) 
+                            custom_timer++;
+                        } 
+                        else if (custom_options == CUSTOM_SELECT_INC) {
+                            if (custom_increment < 60) 
+                            custom_increment++;
+                        }
+                        lcd_display_custom_digit(custom_timer, custom_increment);
+                    }
+                    break;
+                case INPUT_LEFT:
                     if (menu_state == MENU_OPEN) {
                         if (menu_options > 0) {
                             menu_options--;  // Previous option
                         } else {
                             menu_options = MENU_SELECT_BACK;  // looping
                         }
-                        //Move the cursor to the left
+                        //Move the cursor to the left option
                         display_menu_cursor(menu_options);
                     }
+                    else if (custom_state == CUSTOM_OPEN) {
+                        if (custom_options > 0) {
+                            custom_options--;  // Previous option
+                        } else {
+                            custom_options = CUSTOM_SELECT_TIME;  // looping
+                        }
+                        //Move the cursor to the left option
+                        display_custom_cursor(custom_options);
+                    }
                     break;
-                //Even if menu_options change when the menu isn't opened, it will be reseted to blitz(1rst option) when we'll open the menu
-                case INPUT_UP:
+                case INPUT_RIGHT:
                     if (menu_state == MENU_OPEN) {
                         if (menu_options < MENU_SELECT_COUNT - 1) {
                             menu_options++;  // Next option
@@ -229,51 +269,89 @@ void menu_task(void *arg) {
                         } else {
                             menu_options = MENU_SELECT_BLITZ;  // looping
                         }
-                        //Move the cursor to the right
+                        //Move the cursor to the right option
                         display_menu_cursor(menu_options);
+                    }
+                    else if (custom_state == CUSTOM_OPEN) {
+                        if (custom_options < CUSTOM_SELECT_COUNT - 1) {
+                            custom_options++;  // Next option
+
+                        } else {
+                            custom_options = CUSTOM_SELECT_TIME;  // looping
+                        }
+                        //Move the cursor to the right option
+                        display_custom_cursor(custom_options);
                     }
                     break;
                 // Two behaviors : if menu not open -> open menu button / if menu open -> ok button 
                 case INPUT_OK:
-                    switch (menu_state) {
-                        case MENU_CLOSED:
-                            pause_clk();
-                            menu_state = MENU_OPEN; //If the menu is closed, then open it
-                            menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
-                            //display menu and display the cursor at blitz
-                            display_menu_cursor(menu_options);
-                            printf("Menu opened\n");
+                    if (custom_state == CUSTOM_OPEN)
+                    {
+                        switch(custom_options)
+                        {
+                            case CUSTOM_SELECT_CONFIRM:
+                                set_clk_settings(custom_timer*60, custom_increment);
+                                break;
+                            case CUSTOM_SELECT_RESET:
+                                break;
+                            case CUSTOM_SELECT_BACK:
+                                printf("Back selected\n");
+                                break;
+                            default:
+                                break;
+                        }
+                        if (custom_options == CUSTOM_SELECT_CONFIRM || custom_options == CUSTOM_SELECT_BACK) {
+                            custom_state = CUSTOM_CLOSED;
+                            lcd_clear_player1 (); lcd_clear_player2 ();
+                            menu_state = MENU_CLOSED;
+                            printf("Returning to Clock\n");
+                        }
+                    }
+                    else 
+                    {
+                        switch (menu_state) {
+                            case MENU_CLOSED:
+                                menu_state = MENU_OPEN; //If the menu is closed, then open it
+                                menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
+                                //display menu and display the cursor at blitz
+                                display_menu_cursor(menu_options);
+                                printf("Menu opened\n");
                                 //Display the menu
-                            break;
-                        case MENU_OPEN:
-                            //Custom option
-                            if (menu_options == MENU_SELECT_CUSTOM) {
-                                printf("Custom selected\n");
-                                // open new window here
-                                return;
-                            }
-                            
-                            //Preconfig options
-                            switch (menu_options) {
-                                case MENU_SELECT_BLITZ:      set_clk_settings(180, 2);   break;
-                                case MENU_SELECT_BULLET:     set_clk_settings(60, 1);    break;
-                                case MENU_SELECT_RAPID:      set_clk_settings(600, 0);   break;
-                                case MENU_SELECT_CLASSICAL:  set_clk_settings(3600, 30); break;
-                                case MENU_SELECT_BACK:       printf("Back selected\n");  break;
-                                default: return;
-                            }
-                            printf("%s selected\n", 
-                                menu_options == MENU_SELECT_BLITZ ? "Blitz" :
-                                menu_options == MENU_SELECT_BULLET ? "Bullet" :
-                                menu_options == MENU_SELECT_RAPID ? "Rapid" :
-                                menu_options == MENU_SELECT_CLASSICAL ? "Classical" : "");
-                                
-                            if (menu_options != MENU_SELECT_CUSTOM) {
-                                menu_state = MENU_CLOSED;
-                                lcd_clear_player1 (); lcd_clear_player2 ();
-                                printf("Returning to Clock\n");
-                            }
-                            break;  
+                                break;
+                            case MENU_OPEN:
+                                //Stop the timer before we change the mode
+                                pause_clk();
+                                //Custom option
+                                if (menu_options == MENU_SELECT_CUSTOM) {
+                                    menu_state = MENU_CLOSED; custom_state = CUSTOM_OPEN;
+                                    custom_timer = 0; custom_increment = 0; //Set the settings to 0
+                                    custom_options = CUSTOM_SELECT_TIME;
+                                    display_custom_cursor(custom_options); 
+                                    printf("Custom selected\n");
+                                }
+                                else {
+                                    //Preconfig options
+                                    switch (menu_options) {
+                                        case MENU_SELECT_BLITZ:      set_clk_settings(180, 2);   break;
+                                        case MENU_SELECT_BULLET:     set_clk_settings(60, 1);    break;
+                                        case MENU_SELECT_RAPID:      set_clk_settings(600, 0);   break;
+                                        case MENU_SELECT_CLASSICAL:  set_clk_settings(3600, 30); break;
+                                        case MENU_SELECT_PAUSE:      pause_clk();                break;
+                                        case MENU_SELECT_RESET:      reset_clk();                break;
+                                        case MENU_SELECT_BACK:       printf("Back selected\n");  break;
+                                        default: return;
+                                    }
+                                    printf("%s selected\n", 
+                                        menu_options == MENU_SELECT_BLITZ ? "Blitz" :
+                                        menu_options == MENU_SELECT_BULLET ? "Bullet" :
+                                        menu_options == MENU_SELECT_RAPID ? "Rapid" :
+                                        menu_options == MENU_SELECT_CLASSICAL ? "Classical" : "");
+                                    lcd_clear_player1 (); lcd_clear_player2 ();
+                                    menu_state = MENU_CLOSED;
+                                    printf("Returning to Clock\n");
+                                }
+                                break;  
+                        }
                     }
                     break;
                 default:
@@ -327,6 +405,7 @@ void app_main() {
     if (!esp_timer_is_active(timer_handle_display)) {
         ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle_display, 1000000));  // Start timer with an interval of 1 second for displaying(1000000 µs)
     }
+
     // Display initial time
     print_time();
 

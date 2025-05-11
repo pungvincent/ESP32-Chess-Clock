@@ -12,10 +12,10 @@
 // GPIO for buttons
 #define BUTTON_PLAYER1_GPIO 2
 #define BUTTON_PLAYER2_GPIO 4
-#define BUTTON_RESET_GPIO 16
-#define BUTTON_PAUSE_GPIO 17
 #define BUTTON_MINUS_GPIO 5
 #define BUTTON_PLUS_GPIO 18
+#define BUTTON_LEFT_GPIO 16
+#define BUTTON_RIGHT_GPIO 17
 #define BUTTON_MENU_GPIO 19
 
 // Interruption
@@ -60,22 +60,24 @@ void IRAM_ATTR button_player2_isr(void* arg) {
     xSemaphoreGiveFromISR(clk_Semaphore, NULL);
 }
 
-void IRAM_ATTR button_reset_isr(void* arg) {
-    reset_clk();
-}
-
-void IRAM_ATTR button_pause_isr(void* arg) {
-    pause_clk();
-}
-
 void IRAM_ATTR button_minus_isr(void* arg) {
-    input_event_t event_down = INPUT_DOWN;
-    xQueueSendFromISR(Menu_cmd_queue, &event_down, (TickType_t) 0);
+    input_event_t event_minus = INPUT_MINUS;
+    xQueueSendFromISR(Menu_cmd_queue, &event_minus, (TickType_t) 0);
 }
 
 void IRAM_ATTR button_plus_isr(void* arg) {
-    input_event_t event_up = INPUT_UP;
-    xQueueSendFromISR(Menu_cmd_queue, &event_up, (TickType_t) 0);
+    input_event_t event_plus = INPUT_PLUS;
+    xQueueSendFromISR(Menu_cmd_queue, &event_plus, (TickType_t) 0);
+}
+
+void IRAM_ATTR button_left_isr(void* arg) {
+    input_event_t event_left = INPUT_LEFT;
+    xQueueSendFromISR(Menu_cmd_queue, &event_left, (TickType_t) 0);
+}
+
+void IRAM_ATTR button_right_isr(void* arg) {
+    input_event_t event_right = INPUT_RIGHT;
+    xQueueSendFromISR(Menu_cmd_queue, &event_right, (TickType_t) 0);
 }
 
 void IRAM_ATTR button_menu_isr(void* arg) { 
@@ -109,13 +111,13 @@ void init_buttons() {
     // Config button for player 2
     gpio_setup_isr(BUTTON_PLAYER2_GPIO, button_player2_isr);
     // Config button for reset
-    gpio_setup_isr(BUTTON_RESET_GPIO, button_reset_isr);
-    // Config button for pause
-    gpio_setup_isr(BUTTON_PAUSE_GPIO, button_pause_isr);
-    // Config button for minus
     gpio_setup_isr(BUTTON_MINUS_GPIO, button_minus_isr);
-    // Config button for plus
+    // Config button for pause
     gpio_setup_isr(BUTTON_PLUS_GPIO, button_plus_isr);
+    // Config button for minus
+    gpio_setup_isr(BUTTON_LEFT_GPIO, button_left_isr);
+    // Config button for plus
+    gpio_setup_isr(BUTTON_RIGHT_GPIO, button_right_isr);
     // Config button for menu
     gpio_setup_isr(BUTTON_MENU_GPIO, button_menu_isr);
 }

@@ -1,5 +1,7 @@
 
 /** Put this in the src folder **/
+#include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 #include "i2c-lcd.h"
 #include "esp_log.h"
@@ -12,6 +14,10 @@
 #define SLAVE_ADDRESS_LCD_player2 0x4C>>1 //Player_1: 0x27 and player2: 0x26
 
 esp_err_t err;
+
+//Custom mode time and increment time
+extern unsigned int custom_timer;   //in minutes
+extern unsigned int custom_increment; // in secondes
 
 #define I2C_NUM I2C_NUM_0
 
@@ -169,6 +175,7 @@ void lcd_display_chess_counter(char time_display1[], char time_display2[]) {
 	lcd_send_string_player2(time_display2);
 }
 
+//Display the menu
 void lcd_display_menu() {
 	//Display the counter on player's 1 display
 	lcd_put_cur_player1(0, 1);
@@ -183,5 +190,57 @@ void lcd_display_menu() {
 	lcd_put_cur_player2(0, 1);
 	lcd_send_string_player2("Custom");
 	lcd_put_cur_player2(0, 9);
+	lcd_send_string_player2("Pause");
+	lcd_put_cur_player2(1, 1);
+	lcd_send_string_player2("Reset");
+	lcd_put_cur_player2(1, 9);
 	lcd_send_string_player2("Back");
+}
+
+// Display the menu for custom mode
+void lcd_display_custom() {
+	//Display the counter on player's 1 display
+	lcd_put_cur_player1(0, 1);
+	lcd_send_string_player1("Timer");
+	lcd_put_cur_player1(0, 8);
+	lcd_send_string_player1("Inc");
+	lcd_put_cur_player1(1, 1);
+	lcd_display_custom_digit(custom_timer, custom_increment);
+	//Display the counter on player's 2 display
+	lcd_put_cur_player2(0, 1);
+	lcd_send_string_player2("Confirm");
+	lcd_put_cur_player2(0, 10);
+	lcd_send_string_player2("Reset");
+	lcd_put_cur_player2(1, 1);
+	lcd_send_string_player2("Back");
+}
+
+// Display the updated digits in custom mode
+void lcd_display_custom_digit() {
+
+	printf("%d" , custom_timer );
+	// Buffers for formatted time
+	char custom_timer_min[10];
+	char custom_inc_sec[10];
+
+	// Format minutes and seconds
+	sprintf(custom_timer_min, "%02d", custom_timer);  // Minutes
+	sprintf(custom_inc_sec, "%02d", custom_increment);  // Seconds
+
+	// Build timer display (e.g., "05:00")
+	char Custom_timer_display[20];
+	strcpy(Custom_timer_display, custom_timer_min);
+	strcat(Custom_timer_display, ":00");  // No need to change the sec
+
+
+	// Build increment display (e.g., "00:30")
+	char Custom_increment_display[20];
+	strcpy(Custom_increment_display, "00:");
+	strcat(Custom_increment_display, custom_inc_sec);
+
+	// Display on LCD
+	lcd_put_cur_player1(1, 1);
+	lcd_send_string_player1(Custom_timer_display);
+	lcd_put_cur_player1(1, 8);
+	lcd_send_string_player1(Custom_increment_display);
 }
