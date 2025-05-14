@@ -10,9 +10,21 @@
 #include "driver/i2c.h"
 #include "freertos/queue.h"
 
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include "esp_netif.h"
+#include "esp_http_client.h"
+
 #include "buttons.h"
 #include "i2c-lcd.h"
 #include "menu.h"
+
+//Wifi config
+static const char *TAG_wifi= "WIFI";
+#define WIFI_SSID "myssid"
+#define WIFI_PASS "mypwd"
 
 //i2c Configuration
 static const char *TAG = "i2c-lcd";
@@ -23,6 +35,30 @@ static const char *TAG = "i2c-lcd";
 #define I2C_MASTER_TX_BUF_DISABLE   0                          /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_RX_BUF_DISABLE   0                          /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_TIMEOUT_MS       1000
+
+// Wi-Fi
+void wifi_init_sta(void) {
+    esp_netif_init();
+    esp_event_loop_create_default();
+    esp_netif_create_default_wifi_sta();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    esp_wifi_init(&cfg);
+
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS,
+        },
+    };
+
+    esp_wifi_set_mode(WIFI_MODE_STA);
+    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    esp_wifi_start();
+
+    ESP_LOGI(TAG_wifi, "Wi-Fi connection...");
+    esp_wifi_connect();
+}
 
 //i2c master initialization
 static esp_err_t i2c_master_init(void)
@@ -363,8 +399,11 @@ void menu_task(void *arg) {
 }
 
 
-
 void app_main() {
+    //Wifi
+    nvs_flash_init();
+    wifi_init_sta();
+    vTaskDelay(pdMS_TO_TICKS(5000)); // Wait for Wifi
 
     //Init times values
     initialize_times();
