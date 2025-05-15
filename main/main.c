@@ -23,8 +23,8 @@
 
 //Wifi config
 static const char *TAG_wifi= "WIFI";
-#define WIFI_SSID "myssid"
-#define WIFI_PASS "mypwd"
+#define WIFI_SSID CONFIG_WIFI_SSID
+#define WIFI_PASS CONFIG_WIFI_PASS
 
 //i2c Configuration
 static const char *TAG = "i2c-lcd";
