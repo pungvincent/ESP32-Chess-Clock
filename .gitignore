@@ -15,4 +15,5 @@ Thumbs.db
 *.log
 
 # Ignore old files
+sdkconfig
 sdkconfig.old
