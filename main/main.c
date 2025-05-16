@@ -22,7 +22,8 @@
 #include "menu.h"
 
 //Wifi config
-static const char *TAG_wifi= "WIFI";
+static const char *TAG_wifi = "WIFI";  // Logging tag for ESP_LOG functions
+bool wifi_connected = false;  // Boolean to track connection status
 #define WIFI_SSID CONFIG_WIFI_SSID
 #define WIFI_PASS CONFIG_WIFI_PASS
 
@@ -36,15 +37,35 @@ static const char *TAG = "i2c-lcd";
 #define I2C_MASTER_RX_BUF_DISABLE   0                          /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_TIMEOUT_MS       1000
 
-// Wi-Fi
+// Wi-Fi event handler
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+                               int32_t event_id, void* event_data) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        ESP_LOGI(TAG_wifi, "Disconnected. Reconnecting...");
+        wifi_connected = false;
+        esp_wifi_connect();
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        ESP_LOGI(TAG_wifi, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        wifi_connected = true;
+    }
+}
+
+// Initialize Wi-Fi in station (STA) mode
 void wifi_init_sta(void) {
-    esp_netif_init();
-    esp_event_loop_create_default();
-    esp_netif_create_default_wifi_sta();
+    esp_netif_init();                         // Initialize TCP/IP stack
+    esp_event_loop_create_default();          // Create default event loop
+    esp_netif_create_default_wifi_sta();      // Create default Wi-Fi STA network interface
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&cfg);
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();  // Default Wi-Fi config
+    esp_wifi_init(&cfg);                                  // Initialize Wi-Fi driver
+    
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
 
+    // Set up Wi-Fi credentials
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = WIFI_SSID,
@@ -52,12 +73,12 @@ void wifi_init_sta(void) {
         },
     };
 
-    esp_wifi_set_mode(WIFI_MODE_STA);
-    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
-    esp_wifi_start();
+    esp_wifi_set_mode(WIFI_MODE_STA);                    // Set to station mode
+    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);      // Apply config
+    esp_wifi_start();                                    // Start Wi-Fi
 
-    ESP_LOGI(TAG_wifi, "Wi-Fi connection...");
-    esp_wifi_connect();
+    ESP_LOGI(TAG_wifi, "Wi-Fi Connexion...");
+    esp_wifi_connect();                                  // Try to connect
 }
 
 //i2c master initialization
@@ -401,9 +422,9 @@ void menu_task(void *arg) {
 
 void app_main() {
     //Wifi
-    nvs_flash_init();
-    wifi_init_sta();
-    vTaskDelay(pdMS_TO_TICKS(5000)); // Wait for Wifi
+    ESP_ERROR_CHECK(nvs_flash_init());      // Initialize NVS (required by Wi-Fi)
+    wifi_init_sta();          // Connect to Wi-Fi
+    vTaskDelay(pdMS_TO_TICKS(5000));  // Wait for Wi-Fi to establish connection
 
     //Init times values
     initialize_times();
