@@ -190,7 +190,7 @@ void lcd_display_menu() {
 	lcd_put_cur_player2(0, 1);
 	lcd_send_string_player2("Custom");
 	lcd_put_cur_player2(0, 9);
-	lcd_send_string_player2("Pause");
+	lcd_send_string_player2("Lichess");
 	lcd_put_cur_player2(1, 1);
 	lcd_send_string_player2("Reset");
 	lcd_put_cur_player2(1, 9);

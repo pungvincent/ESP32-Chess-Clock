@@ -265,8 +265,6 @@ void player2_task(void* arg) {
     }
 }
 
-
-
 void menu_task(void *arg) {
     while (1) {
         if (xQueueReceive(Menu_cmd_queue, &(event), (TickType_t) 5)) {
@@ -386,6 +384,9 @@ void menu_task(void *arg) {
                                     display_custom_cursor(custom_options); 
                                     printf("Custom selected\n");
                                 }
+                                else if (menu_options == MENU_SELECT_LICHESS) {
+
+                                }
                                 else {
                                     //Preconfig options
                                     switch (menu_options) {
@@ -393,7 +394,6 @@ void menu_task(void *arg) {
                                         case MENU_SELECT_BULLET:     set_clk_settings(60, 1);    break;
                                         case MENU_SELECT_RAPID:      set_clk_settings(600, 0);   break;
                                         case MENU_SELECT_CLASSICAL:  set_clk_settings(3600, 30); break;
-                                        case MENU_SELECT_PAUSE:      pause_clk();                break;
                                         case MENU_SELECT_RESET:      reset_clk();                break;
                                         case MENU_SELECT_BACK:       printf("Back selected\n");  break;
                                         default: return;
@@ -421,10 +421,37 @@ void menu_task(void *arg) {
 
 
 void app_main() {
+    //i2c LCD init
+    ESP_ERROR_CHECK(i2c_master_init());
+    ESP_LOGI(TAG, "I2C initialized successfully");
+    
+    //lcd init
+    lcd_init_player1();
+    lcd_clear_player1();
+    lcd_init_player2();
+    lcd_clear_player2();
+
+    // Initialize buttons and timers
+    init_buttons();
+    init_timer();
+
     //Wifi
+    lcd_put_cur_player1(0, 0);
+	lcd_send_string_player1("Connection to");
+    lcd_put_cur_player1(1, 0);
+	lcd_send_string_player1("Wifi...");
     ESP_ERROR_CHECK(nvs_flash_init());      // Initialize NVS (required by Wi-Fi)
     wifi_init_sta();          // Connect to Wi-Fi
-    vTaskDelay(pdMS_TO_TICKS(5000));  // Wait for Wi-Fi to establish connection
+    vTaskDelay(pdMS_TO_TICKS(7000));  // Wait for Wi-Fi to establish connection
+    if (wifi_connected) {
+        lcd_put_cur_player2(0, 3);
+	    lcd_send_string_player2("Connected!");
+    } else {
+        lcd_put_cur_player2(0, 1);
+	    lcd_send_string_player2("Not connected!");
+    }
+    vTaskDelay(pdMS_TO_TICKS(2000)); 
+    lcd_clear_player1(); lcd_clear_player2();
 
     //Init times values
     initialize_times();
@@ -441,20 +468,6 @@ void app_main() {
     if (Menu_cmd_queue == NULL) {
         printf("Failed to create the queue.\n");
     }
-
-    //i2c init
-    ESP_ERROR_CHECK(i2c_master_init());
-    ESP_LOGI(TAG, "I2C initialized successfully");
-    
-    //lcd init
-    lcd_init_player1();
-    lcd_clear_player1();
-    lcd_init_player2();
-    lcd_clear_player2();
-
-    // Initialize buttons and timers
-    init_buttons();
-    init_timer();
 
     // Create tasks for each player
     xTaskCreate(player1_task, "player1_task", 4096, NULL, 5, NULL);
