@@ -13,6 +13,11 @@ typedef enum {
 } custom_state_t;
 
 typedef enum {
+    LICHESS_CLOSED,
+    LICHESS_OPEN
+} Lichess_state_t;
+
+typedef enum {
     MENU_SELECT_BLITZ,
     MENU_SELECT_BULLET,
     MENU_SELECT_RAPID,

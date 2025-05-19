@@ -133,6 +133,7 @@ menu_options_t menu_options = MENU_SELECT_BLITZ;
 custom_options_t custom_options = CUSTOM_SELECT_TIME;
 menu_state_t menu_state = MENU_CLOSED;
 custom_state_t custom_state = CUSTOM_CLOSED;
+Lichess_state_t Lichess_state = LICHESS_CLOSED;
 input_event_t event;
 
 void initialize_times() {
@@ -161,7 +162,7 @@ void player2_timer(void* arg) {
 }
 void display_timer(void* arg) 
 {
-    if (menu_state == MENU_CLOSED && custom_state == CUSTOM_CLOSED) {
+    if (menu_state == MENU_CLOSED && custom_state == CUSTOM_CLOSED && Lichess_state == LICHESS_CLOSED) {
         // Sufficient size to hold concatenated minutes and seconds
         char min1[10];  // Increase the size of min1
         char sec1[10];  // Increase the size of sec1
@@ -368,10 +369,8 @@ void menu_task(void *arg) {
                             case MENU_CLOSED:
                                 menu_state = MENU_OPEN; //If the menu is closed, then open it
                                 menu_options = MENU_SELECT_BLITZ; //Set the cursor to the first option (Blitz)
-                                //display menu and display the cursor at blitz
-                                display_menu_cursor(menu_options);
-                                printf("Menu opened\n");
-                                //Display the menu
+                                display_menu_cursor(menu_options); //display menu and display the cursor at blitz
+                                printf("Menu opened\n"); //Display the menu
                                 break;
                             case MENU_OPEN:
                                 //Stop the timer before we change the mode
@@ -385,6 +384,31 @@ void menu_task(void *arg) {
                                     printf("Custom selected\n");
                                 }
                                 else if (menu_options == MENU_SELECT_LICHESS) {
+                                    menu_state = MENU_CLOSED; Lichess_state = LICHESS_OPEN;
+                                    lcd_clear_player1(); lcd_clear_player2();
+                                    lcd_put_cur_player1(0, 0);
+                                    lcd_send_string_player1("Connection to");
+                                    lcd_put_cur_player1(1, 0);
+                                    lcd_send_string_player1("Wifi...");
+                                    vTaskDelay(pdMS_TO_TICKS(3000)); 
+                                    if (wifi_connected) {
+                                        lcd_put_cur_player2(0, 3);
+                                        lcd_send_string_player2("Connected!");
+                                        vTaskDelay(pdMS_TO_TICKS(2000));
+                                    } else {
+                                        lcd_put_cur_player2(0, 1);
+                                        lcd_send_string_player2("Not connected!");
+                                        lcd_put_cur_player2(1, 0);
+                                        lcd_send_string_player2(">Back to menu...");
+                                        vTaskDelay(pdMS_TO_TICKS(2000)); 
+                                        //Back to menu
+                                        menu_state = MENU_OPEN; Lichess_state = LICHESS_CLOSED;//return to menu
+                                        menu_options = MENU_SELECT_LICHESS; //Set back the cursor to lichess
+                                        display_menu_cursor(menu_options); //display menu and display the cursor at lichess
+                                        printf("Menu opened\n"); //Display the menu
+                                        break;
+                                    }
+                                    lcd_clear_player1(); lcd_clear_player2();
 
                                 }
                                 else {
@@ -436,21 +460,11 @@ void app_main() {
     init_timer();
 
     //Wifi
-    lcd_put_cur_player1(0, 0);
-	lcd_send_string_player1("Connection to");
-    lcd_put_cur_player1(1, 0);
-	lcd_send_string_player1("Wifi...");
+    lcd_put_cur_player1(0, 2); lcd_send_string_player1("Chess clock");
+    lcd_put_cur_player2(0, 3); lcd_send_string_player2("Loading...");
     ESP_ERROR_CHECK(nvs_flash_init());      // Initialize NVS (required by Wi-Fi)
     wifi_init_sta();          // Connect to Wi-Fi
-    vTaskDelay(pdMS_TO_TICKS(7000));  // Wait for Wi-Fi to establish connection
-    if (wifi_connected) {
-        lcd_put_cur_player2(0, 3);
-	    lcd_send_string_player2("Connected!");
-    } else {
-        lcd_put_cur_player2(0, 1);
-	    lcd_send_string_player2("Not connected!");
-    }
-    vTaskDelay(pdMS_TO_TICKS(2000)); 
+    vTaskDelay(pdMS_TO_TICKS(5000));  // Wait for Wi-Fi to establish connection
     lcd_clear_player1(); lcd_clear_player2();
 
     //Init times values
