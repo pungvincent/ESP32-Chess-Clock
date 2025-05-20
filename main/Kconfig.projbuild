@@ -5,4 +5,7 @@ menu "Wi-Fi Configuration"
     config WIFI_PASS
         string "Wi-Fi Password"
         default "YourWiFiPassword"
+    config LICHESS_TOKEN
+        string "Lichess API Token"
+        default "Bearer YourTokenHere"
 endmenu

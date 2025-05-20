@@ -20,6 +20,7 @@
 #include "buttons.h"
 #include "i2c-lcd.h"
 #include "menu.h"
+#include "lichess.h"
 
 //Wifi config
 static const char *TAG_wifi = "WIFI";  // Logging tag for ESP_LOG functions
@@ -395,6 +396,7 @@ void menu_task(void *arg) {
                                         lcd_put_cur_player2(0, 3);
                                         lcd_send_string_player2("Connected!");
                                         vTaskDelay(pdMS_TO_TICKS(2000));
+                                        activate_lichess_mode();
                                     } else {
                                         lcd_put_cur_player2(0, 1);
                                         lcd_send_string_player2("Not connected!");
@@ -484,9 +486,9 @@ void app_main() {
     }
 
     // Create tasks for each player
-    xTaskCreate(player1_task, "player1_task", 4096, NULL, 5, NULL);
-    xTaskCreate(player2_task, "player2_task", 4096, NULL, 5, NULL);
-    xTaskCreatePinnedToCore(menu_task, "menu_task", 4096, NULL, 10, NULL, 1);
+    xTaskCreatePinnedToCore(player1_task, "player1_task", 4096, NULL, 5, NULL, 0);
+    xTaskCreatePinnedToCore(player2_task, "player2_task", 4096, NULL, 5, NULL, 0);
+    xTaskCreatePinnedToCore(menu_task, "menu_task", 4096, NULL, 4, NULL, 1);
 
     //Start display timer (interval of 1 second)
     if (!esp_timer_is_active(timer_handle_display)) {
