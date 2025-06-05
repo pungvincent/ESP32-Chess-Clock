@@ -124,7 +124,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt) {
 
 // Task to periodically fetch the current Lichess game
 void fetch_lichess_game(void *pvParameters) {
-    while(1) {
+    while (1) {
         // Configure HTTPS request
         esp_http_client_config_t config = {
             .url = "https://lichess.org/api/account/playing",  // Lichess API endpoint
@@ -150,10 +150,9 @@ void fetch_lichess_game(void *pvParameters) {
         }
 
         esp_http_client_cleanup(client);                // Free client resources
-        vTaskDelay(pdMS_TO_TICKS(10000));               // Wait 10 seconds before repeating
+        vTaskDelay(pdMS_TO_TICKS(3000));               // Wait 10 seconds before repeating
     }
 }
-
 
 
 void activate_lichess_mode(void) {
@@ -165,7 +164,7 @@ void activate_lichess_mode(void) {
             NULL,
             5,                  // priority > menu
             &lichessTaskHandle,
-            1                   //core 1
+            0                   //core 1
         );
     }
 }

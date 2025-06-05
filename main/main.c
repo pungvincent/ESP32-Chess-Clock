@@ -364,6 +364,18 @@ void menu_task(void *arg) {
                             printf("Returning to Clock\n");
                         }
                     }
+                    else if (Lichess_state == LICHESS_OPEN) {
+                        deactivate_lichess_mode(); // End of Lichess mode
+                        lcd_clear_player1(); lcd_clear_player2();
+                        lcd_put_cur_player1(0, 0); lcd_send_string_player1("Back to");
+                        lcd_put_cur_player1(1, 0); lcd_send_string_player1("Local clock...");
+                        vTaskDelay(pdMS_TO_TICKS(1000));
+                        //Back to menu
+                        menu_state = MENU_OPEN; Lichess_state = LICHESS_CLOSED;//return to menu
+                        menu_options = MENU_SELECT_LICHESS; //Set back the cursor to lichess
+                        display_menu_cursor(menu_options); //display menu and display the cursor at lichess
+                        printf("Menu opened\n"); //Display the menu
+                    }
                     else 
                     {
                         switch (menu_state) {
@@ -373,6 +385,7 @@ void menu_task(void *arg) {
                                 display_menu_cursor(menu_options); //display menu and display the cursor at blitz
                                 printf("Menu opened\n"); //Display the menu
                                 break;
+
                             case MENU_OPEN:
                                 //Stop the timer before we change the mode
                                 pause_clk();
@@ -384,24 +397,21 @@ void menu_task(void *arg) {
                                     display_custom_cursor(custom_options); 
                                     printf("Custom selected\n");
                                 }
+                                //Lichess mode
                                 else if (menu_options == MENU_SELECT_LICHESS) {
                                     menu_state = MENU_CLOSED; Lichess_state = LICHESS_OPEN;
                                     lcd_clear_player1(); lcd_clear_player2();
-                                    lcd_put_cur_player1(0, 0);
-                                    lcd_send_string_player1("Connection to");
-                                    lcd_put_cur_player1(1, 0);
-                                    lcd_send_string_player1("Wifi...");
+                                    lcd_put_cur_player1(0, 0); lcd_send_string_player1("Connection to");
+                                    lcd_put_cur_player1(1, 0); lcd_send_string_player1("Wifi...");
+                                    printf("Lichess mode opened\n");
                                     vTaskDelay(pdMS_TO_TICKS(3000)); 
                                     if (wifi_connected) {
-                                        lcd_put_cur_player2(0, 3);
-                                        lcd_send_string_player2("Connected!");
+                                        lcd_put_cur_player2(0, 3); lcd_send_string_player2("Connected!");
                                         vTaskDelay(pdMS_TO_TICKS(2000));
                                         activate_lichess_mode();
                                     } else {
-                                        lcd_put_cur_player2(0, 1);
-                                        lcd_send_string_player2("Not connected!");
-                                        lcd_put_cur_player2(1, 0);
-                                        lcd_send_string_player2(">Back to menu...");
+                                        lcd_put_cur_player2(0, 1); lcd_send_string_player2("Not connected!");
+                                        lcd_put_cur_player2(1, 0); lcd_send_string_player2(">Back to menu...");
                                         vTaskDelay(pdMS_TO_TICKS(2000)); 
                                         //Back to menu
                                         menu_state = MENU_OPEN; Lichess_state = LICHESS_CLOSED;//return to menu
@@ -411,7 +421,6 @@ void menu_task(void *arg) {
                                         break;
                                     }
                                     lcd_clear_player1(); lcd_clear_player2();
-
                                 }
                                 else {
                                     //Preconfig options
@@ -466,7 +475,7 @@ void app_main() {
     lcd_put_cur_player2(0, 3); lcd_send_string_player2("Loading...");
     ESP_ERROR_CHECK(nvs_flash_init());      // Initialize NVS (required by Wi-Fi)
     wifi_init_sta();          // Connect to Wi-Fi
-    vTaskDelay(pdMS_TO_TICKS(5000));  // Wait for Wi-Fi to establish connection
+    vTaskDelay(pdMS_TO_TICKS(2000));  // Wait for Wi-Fi to establish connection
     lcd_clear_player1(); lcd_clear_player2();
 
     //Init times values
@@ -486,8 +495,8 @@ void app_main() {
     }
 
     // Create tasks for each player
-    xTaskCreatePinnedToCore(player1_task, "player1_task", 4096, NULL, 5, NULL, 0);
-    xTaskCreatePinnedToCore(player2_task, "player2_task", 4096, NULL, 5, NULL, 0);
+    xTaskCreatePinnedToCore(player1_task, "player1_task", 4096, NULL, 4, NULL, 0);
+    xTaskCreatePinnedToCore(player2_task, "player2_task", 4096, NULL, 4, NULL, 0);
     xTaskCreatePinnedToCore(menu_task, "menu_task", 4096, NULL, 4, NULL, 1);
 
     //Start display timer (interval of 1 second)
