@@ -42,7 +42,7 @@ extern menu_state_t state;
 void IRAM_ATTR button_player1_isr(void* arg) {
     //increment after a push
     if (player2_turn == true && player1_turn == false)  //if it was the player2's turn
-    player2_time = fmin(player2_time + player2_inc, PLAYER_TIME*100);   //Increment but cap at base time
+    player2_time = player2_time + player2_inc;   //Increment
     // Toggle between players on button press
     player1_turn = true;
     player2_turn = false;
@@ -52,7 +52,7 @@ void IRAM_ATTR button_player1_isr(void* arg) {
 void IRAM_ATTR button_player2_isr(void* arg) {
     //increment after a push
     if (player1_turn == true && player2_turn == false)  //if it was the player1's turn
-        player1_time = fmin(player1_time + player1_inc, PLAYER_TIME*100);   //Increment but cap at base time
+        player1_time = player1_time + player1_inc;   //Increment
     // Toggle between players on button press
     player2_turn = true;
     player1_turn = false;

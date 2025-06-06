@@ -361,6 +361,7 @@ void menu_task(void *arg) {
                             custom_state = CUSTOM_CLOSED;
                             lcd_clear_player1 (); lcd_clear_player2 ();
                             menu_state = MENU_CLOSED;
+                            reset_clk(); //Rst or else the clk will start by itself
                             printf("Returning to Clock\n");
                         }
                     }
