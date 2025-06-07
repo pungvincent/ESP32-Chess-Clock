@@ -19,6 +19,11 @@ esp_err_t err;
 extern unsigned int custom_timer;   //in minutes
 extern unsigned int custom_increment; // in secondes
 
+//Custom set mode P1 and P2 time
+extern unsigned int custom_set_p1_time;
+extern unsigned int custom_set_p2_time;
+extern unsigned int custom_set_inc_time;
+
 #define I2C_NUM I2C_NUM_0
 
 static const char *TAG = "LCD";
@@ -204,20 +209,34 @@ void lcd_display_custom() {
 	lcd_send_string_player1("Timer");
 	lcd_put_cur_player1(0, 8);
 	lcd_send_string_player1("Inc");
-	lcd_put_cur_player1(1, 1);
-	lcd_display_custom_digit(custom_timer, custom_increment);
+	lcd_display_custom_digit();
 	//Display the counter on player's 2 display
 	lcd_put_cur_player2(0, 1);
 	lcd_send_string_player2("Confirm");
 	lcd_put_cur_player2(0, 10);
-	lcd_send_string_player2("Reset");
+	lcd_send_string_player2("Set");
 	lcd_put_cur_player2(1, 1);
+	lcd_send_string_player2("Back");
+}
+
+void lcd_display_set_custom() {
+	//Display the counter on player's 1 display
+	lcd_put_cur_player1(0, 0);
+	lcd_send_string_player1("P1:");
+	lcd_put_cur_player1(0, 8);
+	lcd_send_string_player1("P2:");
+	//Display the counter on player's 2 display
+	lcd_put_cur_player2(0, 1);
+	lcd_send_string_player2("Inc:");
+	lcd_display_custom_set_digit();
+	lcd_put_cur_player2(0, 9);
+	lcd_send_string_player2("Confirm");
+	lcd_put_cur_player2(1, 9);
 	lcd_send_string_player2("Back");
 }
 
 // Display the updated digits in custom mode
 void lcd_display_custom_digit() {
-
 	printf("%d" , custom_timer );
 	// Buffers for formatted time
 	char custom_timer_min[10];
@@ -243,4 +262,50 @@ void lcd_display_custom_digit() {
 	lcd_send_string_player1(Custom_timer_display);
 	lcd_put_cur_player1(1, 8);
 	lcd_send_string_player1(Custom_increment_display);
+}
+
+// Display the updated digits in custom set mode
+void lcd_display_custom_set_digit() {
+	printf("%d" , custom_timer );
+	// Buffers for formatted time
+	char p1_min[10];
+	char p1_sec[10];
+	char p2_min[10];
+	char p2_sec[10];
+	char inc_min[10];
+	char inc_sec[10];
+
+	// Format minutes and seconds
+	sprintf(p1_min, "%02d", custom_set_p1_time/60);  // Minutes
+	sprintf(p1_sec, "%02d", custom_set_p1_time%60);  // Seconds
+	sprintf(p2_min, "%02d", custom_set_p2_time/60);  // Minutes
+	sprintf(p2_sec, "%02d", custom_set_p2_time%60);  // Seconds
+	sprintf(inc_min, "%02d", custom_set_inc_time/60);  // Minutes
+	sprintf(inc_sec, "%02d", custom_set_inc_time%60);  // Seconds
+
+	// Build P1 display (e.g., "05:00")
+	char Custom_set_p1_timer_display[20];
+	strcpy(Custom_set_p1_timer_display, p1_min);
+	strcat(Custom_set_p1_timer_display, ":");
+	strcat(Custom_set_p1_timer_display, p1_sec); 
+
+	// Build P2 display (e.g., "05:00")
+	char Custom_set_p2_timer_display[20];
+	strcpy(Custom_set_p2_timer_display, p2_min);
+	strcat(Custom_set_p2_timer_display, ":");
+	strcat(Custom_set_p2_timer_display, p2_sec); 
+
+	// Build increment time display (e.g., "05:00")
+	char Custom_set_inc_timer_display[20];
+	strcpy(Custom_set_inc_timer_display, inc_min);
+	strcat(Custom_set_inc_timer_display, ":"); 
+	strcat(Custom_set_inc_timer_display, inc_sec); 
+
+	// Display on LCD
+	lcd_put_cur_player1(1, 3);
+	lcd_send_string_player1(Custom_set_p1_timer_display);
+	lcd_put_cur_player1(1, 11);
+	lcd_send_string_player1(Custom_set_p2_timer_display);
+	lcd_put_cur_player2(1, 1);
+	lcd_send_string_player2(Custom_set_inc_timer_display);
 }

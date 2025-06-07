@@ -17,4 +17,6 @@ void lcd_clear_player2 (void);
 void lcd_display_chess_counter(char time_display1[], char time_display2[]);
 void lcd_display_menu();
 void lcd_display_custom();
+void lcd_display_set_custom();
 void lcd_display_custom_digit();
+void lcd_display_custom_set_digit();

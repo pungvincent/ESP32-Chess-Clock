@@ -113,6 +113,11 @@ unsigned int player2_inc;
 unsigned int custom_timer;   //in minutes
 unsigned int custom_increment; // in secondes
 
+//Custom set mode P1 and P2 time
+unsigned int custom_set_p1_time;
+unsigned int custom_set_p2_time;
+unsigned int custom_set_inc_time;
+
 //Turn flag
 bool player1_turn = false;
 bool player2_turn = false;  
@@ -132,8 +137,10 @@ bool player2_timer_running = false;  // Variable to track if player 2's timer is
 QueueHandle_t Menu_cmd_queue;
 menu_options_t menu_options = MENU_SELECT_BLITZ;
 custom_options_t custom_options = CUSTOM_SELECT_TIME;
+custom_set_options_t custom_set_options = CUSTOM_SET_SELECT_P1_MIN_TENTH;
 menu_state_t menu_state = MENU_CLOSED;
 custom_state_t custom_state = CUSTOM_CLOSED;
+custom_set_state_t custom_set_state = CUSTOM_SET_CLOSED;
 Lichess_state_t Lichess_state = LICHESS_CLOSED;
 input_event_t event;
 
@@ -163,7 +170,7 @@ void player2_timer(void* arg) {
 }
 void display_timer(void* arg) 
 {
-    if (menu_state == MENU_CLOSED && custom_state == CUSTOM_CLOSED && Lichess_state == LICHESS_CLOSED) {
+    if (menu_state == MENU_CLOSED && custom_state == CUSTOM_CLOSED && Lichess_state == LICHESS_CLOSED && custom_set_state == CUSTOM_SET_CLOSED) {
         // Sufficient size to hold concatenated minutes and seconds
         char min1[10];  // Increase the size of min1
         char sec1[10];  // Increase the size of sec1
@@ -276,26 +283,104 @@ void menu_task(void *arg) {
                     if (custom_state == CUSTOM_OPEN) {
                         if (custom_options == CUSTOM_SELECT_TIME) {
                             if (custom_timer > 0) 
-                            custom_timer--;
+                                custom_timer--;
                         } 
                         else if (custom_options == CUSTOM_SELECT_INC) {
                             if (custom_increment > 0) 
-                            custom_increment--;
+                                custom_increment--;
                         }
                         lcd_display_custom_digit(custom_timer, custom_increment);
                     }
+                    else if (custom_set_state == CUSTOM_SET_OPEN) {
+                        if (custom_set_options == CUSTOM_SET_SELECT_P1_MIN_TENTH) {
+                            if (custom_set_p1_time > 600) //10min = 600 sec
+                                custom_set_p1_time-= 600;
+                        } 
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P1_MIN_UNIT) {
+                            if (custom_set_p1_time > 60) //1min = 60 sec
+                                custom_set_p1_time-= 60;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P1_SEC_TENTH) {
+                            if (custom_set_p1_time > 10) 
+                                custom_set_p1_time-= 10;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P1_SEC_UNIT) {
+                            if (custom_set_p1_time > 0) 
+                                custom_set_p1_time--;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_MIN_TENTH) {
+                            if (custom_set_p2_time > 600) //10min = 600 sec
+                                custom_set_p2_time-= 600;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_MIN_UNIT) {
+                            if (custom_set_p2_time > 60) //1min = 60 sec
+                                custom_set_p2_time-= 60;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_SEC_TENTH) {
+                            if (custom_set_p2_time > 10) 
+                                custom_set_p2_time-= 10;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_SEC_UNIT) {
+                            if (custom_set_p2_time > 0) 
+                                custom_set_p2_time--;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_INC) {
+                            if (custom_set_inc_time > 0) 
+                                custom_set_inc_time--;
+                        }
+                        lcd_display_custom_set_digit();
+                    } 
                     break;
                 case INPUT_PLUS:
                     if (custom_state == CUSTOM_OPEN) {
                         if (custom_options == CUSTOM_SELECT_TIME) {
                             if (custom_timer < 100) 
-                            custom_timer++;
+                                custom_timer++;
                         } 
                         else if (custom_options == CUSTOM_SELECT_INC) {
                             if (custom_increment < 60) 
-                            custom_increment++;
+                                custom_increment++;
                         }
                         lcd_display_custom_digit(custom_timer, custom_increment);
+                    }
+                    else if (custom_set_state == CUSTOM_SET_OPEN) {
+                        if (custom_set_options == CUSTOM_SET_SELECT_P1_MIN_TENTH) {
+                            if (custom_set_p1_time < 5340) //99min - 600 sec= 5340 sec
+                                custom_set_p1_time+=600;
+                        } 
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P1_MIN_UNIT) {
+                            if (custom_set_p1_time < 5880) //99min - 60 sec = 5880 sec
+                                custom_set_p1_time+=60;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P1_SEC_TENTH) {
+                            if (custom_set_p1_time < 5930) //99min - 10 sec = 5940 sec
+                                custom_set_p1_time+=10;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P1_SEC_UNIT) {
+                            if (custom_set_p1_time < 5940) //99min = 5940 sec
+                                custom_set_p1_time++;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_MIN_TENTH) {
+                            if (custom_set_p2_time < 5340) 
+                                custom_set_p2_time+=600;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_MIN_UNIT) {
+                            if (custom_set_p2_time < 5880) 
+                                custom_set_p2_time+=60;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_SEC_TENTH) {
+                            if (custom_set_p2_time < 5930) 
+                                custom_set_p2_time+=10;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_P2_SEC_UNIT) {
+                            if (custom_set_p2_time < 5940) 
+                                custom_set_p2_time++;
+                        }
+                        else if (custom_set_options == CUSTOM_SET_SELECT_INC) {
+                            if (custom_set_inc_time < 5940) 
+                                custom_set_inc_time++;
+                        }
+                        lcd_display_custom_set_digit();
                     }
                     break;
                 case INPUT_LEFT:
@@ -312,10 +397,19 @@ void menu_task(void *arg) {
                         if (custom_options > 0) {
                             custom_options--;  // Previous option
                         } else {
-                            custom_options = CUSTOM_SELECT_TIME;  // looping
+                            custom_options = CUSTOM_SELECT_BACK;  // looping
                         }
                         //Move the cursor to the left option
                         display_custom_cursor(custom_options);
+                    }
+                    else if (custom_set_state == CUSTOM_SET_OPEN) {
+                        if (custom_set_options > 0) {
+                            custom_set_options--;  // Previous option
+                        } else {
+                            custom_set_options = CUSTOM_SET_SELECT_BACK;  // looping
+                        }
+                        //Move the cursor to the left option
+                        display_custom_set_cursor(custom_set_options);
                     }
                     break;
                 case INPUT_RIGHT:
@@ -339,6 +433,16 @@ void menu_task(void *arg) {
                         //Move the cursor to the right option
                         display_custom_cursor(custom_options);
                     }
+                    else if (custom_set_state == CUSTOM_SET_OPEN) {
+                        if (custom_set_options < CUSTOM_SET_SELECT_COUNT - 1) {
+                            custom_set_options++;  // Next option
+
+                        } else {
+                            custom_set_options = CUSTOM_SET_SELECT_P1_MIN_TENTH;  // looping
+                        }
+                        //Move the cursor to the right option
+                        display_custom_set_cursor(custom_set_options);
+                    }
                     break;
                 // Two behaviors : if menu not open -> open menu button / if menu open -> ok button 
                 case INPUT_OK:
@@ -348,22 +452,44 @@ void menu_task(void *arg) {
                         {
                             case CUSTOM_SELECT_CONFIRM:
                                 set_clk_settings(custom_timer*60, custom_increment);
+                                menu_state = MENU_CLOSED;
+                                lcd_clear_player1 (); lcd_clear_player2();
+                                printf("Returning to Clock\n");
                                 break;
-                            case CUSTOM_SELECT_RESET:
+                            case CUSTOM_SELECT_SET:
+                                menu_state = MENU_CLOSED; custom_set_state = CUSTOM_SET_OPEN;
+                                custom_set_p1_time = 0;custom_set_p2_time = 0;custom_set_inc_time = 0; //Set the settings to 0
+                                custom_set_options = CUSTOM_SET_SELECT_P1_MIN_TENTH;
+                                display_custom_set_cursor(custom_set_options);
+                                printf("Custom Set selected\n");
                                 break;
                             case CUSTOM_SELECT_BACK:
+                                lcd_clear_player1 (); lcd_clear_player2();
+                                menu_state = MENU_CLOSED;
                                 printf("Back selected\n");
                                 break;
                             default:
                                 break;
                         }
-                        if (custom_options == CUSTOM_SELECT_CONFIRM || custom_options == CUSTOM_SELECT_BACK) {
-                            custom_state = CUSTOM_CLOSED;
-                            lcd_clear_player1 (); lcd_clear_player2 ();
-                            menu_state = MENU_CLOSED;
-                            reset_clk(); //Rst or else the clk will start by itself
-                            printf("Returning to Clock\n");
+                        custom_state = CUSTOM_CLOSED;
+                    }
+                    else if (custom_set_state == CUSTOM_SET_OPEN)
+                    {
+                        switch(custom_set_options)
+                        {
+                            case CUSTOM_SET_SELECT_CONFIRM:
+                                set_custom_clk_settings(custom_set_p1_time, custom_set_p2_time, custom_set_inc_time);
+                                menu_state = MENU_CLOSED;
+                                printf("Returning to Clock\n");
+                                break;
+                            case CUSTOM_SET_SELECT_BACK:
+                                printf("Back selected\n");
+                                break;
+                            default:
+                                break;
                         }
+                        custom_set_state = CUSTOM_SET_CLOSED;
+                        lcd_clear_player1 (); lcd_clear_player2 ();
                     }
                     else if (Lichess_state == LICHESS_OPEN) {
                         deactivate_lichess_mode(); // End of Lichess mode
