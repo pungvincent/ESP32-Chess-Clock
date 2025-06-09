@@ -19,6 +19,10 @@ extern unsigned int player2_inc;
 //Turn flag
 extern bool player1_turn;
 extern bool player2_turn;  
+
+extern bool player1_win;
+extern bool player2_win;
+
 // Semaphore to synchronize tasks
 extern SemaphoreHandle_t clk_Semaphore;
 
@@ -65,8 +69,8 @@ void pause_clk() {
 
 void reset_clk() {
     // All timers are stopped and reset (push a player's button to resume)
-    player2_turn = false;
-    player1_turn = false;
+    player2_turn = false; player1_turn = false;
+    player1_win = false; player2_win = false;
 
     player1_time = PLAYER_TIME*100;  //Convert to hundredth of a second
     player2_time = PLAYER_TIME*100; 
@@ -79,8 +83,8 @@ void reset_clk() {
 //Set the same timer for each player
 void set_clk_settings(int p_time, int i_time) {
     // All timers are stopped and reset (push a player's button to resume)
-    player2_turn = false;
-    player1_turn = false;
+    player2_turn = false; player1_turn = false;
+    player1_win = false; player2_win = false;
 
     PLAYER_TIME= p_time;
     PLAYER_INC = i_time;
@@ -95,8 +99,8 @@ void set_clk_settings(int p_time, int i_time) {
 //Set different timer for each player
 void set_custom_clk_settings(int p1_time, int p2_time, int i_time) {
     // All timers are stopped and reset (push a player's button to resume)
-    player2_turn = false;
-    player1_turn = false;
+    player2_turn = false; player1_turn = false;
+    player1_win = false; player2_win = false;
 
     player1_time = p1_time*100;  //Convert to hundredth of a second
     player2_time = p2_time*100; 

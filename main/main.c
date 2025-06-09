@@ -133,6 +133,8 @@ esp_timer_handle_t timer_handle_display;
 //Track Variables
 bool player1_timer_running = false;  // Variable to track if player 1's timer is running
 bool player2_timer_running = false;  // Variable to track if player 2's timer is running
+bool player1_win = false;
+bool player2_win =false;
 
 QueueHandle_t Menu_cmd_queue;
 menu_options_t menu_options = MENU_SELECT_BLITZ;
@@ -161,41 +163,60 @@ void print_time() {
 
 // Timer callbacks functions (decrements time each seconds)
 void player1_timer(void* arg) {
-    if (player1_time > 0) player1_time--;
-    print_time();  // Display the remaining time for both players
+    if (player1_time == 0) {
+        player1_win = true;
+    }
+    else if (player1_time > 0) {
+        player1_time--;
+        print_time();  // Display the remaining time for both players
+    }
 }
 void player2_timer(void* arg) {
-    if (player2_time > 0) player2_time--;
-    print_time();  // Display the remaining time for both players
+    if (player2_time == 0) {
+        player2_win = true;
+    }
+    else if (player2_time > 0) {
+        player2_time--;
+        print_time();  // Display the remaining time for both players
+    }
 }
+
 void display_timer(void* arg) 
 {
     if (menu_state == MENU_CLOSED && custom_state == CUSTOM_CLOSED && Lichess_state == LICHESS_CLOSED && custom_set_state == CUSTOM_SET_CLOSED) {
-        // Sufficient size to hold concatenated minutes and seconds
-        char min1[10];  // Increase the size of min1
-        char sec1[10];  // Increase the size of sec1
-        char min2[10];  // Increase the size of min2
-        char sec2[10];  // Increase the size of sec2
+        if (player1_win) {
+            lcd_display_p2_winner();
+        }
+        else if (player2_win) {
+            lcd_display_p1_winner();
+        }
+        else {
+            // Sufficient size to hold concatenated minutes and seconds
+            char min1[10];  // Increase the size of min1
+            char sec1[10];  // Increase the size of sec1
+            char min2[10];  // Increase the size of min2
+            char sec2[10];  // Increase the size of sec2
 
-        // Format minutes and seconds for Player 1
-        sprintf(min1, "%02d", player1_time / (60 * 100));  // Minutes
-        sprintf(sec1, "%02d", player1_time / 100 % 60);    // Seconds
-        sprintf(min2, "%02d", player2_time / (60 * 100));  // Minutes
-        sprintf(sec2, "%02d", player2_time / 100 % 60);    // Seconds
+            // Format minutes and seconds for Player 1
+            sprintf(min1, "%02d", player1_time / (60 * 100));  // Minutes
+            sprintf(sec1, "%02d", player1_time / 100 % 60);    // Seconds
+            sprintf(min2, "%02d", player2_time / (60 * 100));  // Minutes
+            sprintf(sec2, "%02d", player2_time / 100 % 60);    // Seconds
 
-        // Concatenate the two strings
-        char time_display1[20];  // Sufficient size to hold both parts
-        strcpy(time_display1, min1);  // Copy min1 into time_display1
-        strcat(time_display1, ":");  // Add a ":" between minutes and seconds
-        strcat(time_display1, sec1);  // Add seconds to time_display1
+            // Concatenate the two strings
+            char time_display1[20];  // Sufficient size to hold both parts
+            strcpy(time_display1, min1);  // Copy min1 into time_display1
+            strcat(time_display1, ":");  // Add a ":" between minutes and seconds
+            strcat(time_display1, sec1);  // Add seconds to time_display1
 
-        char time_display2[20];  // Sufficient size to hold both parts
-        strcpy(time_display2, min2);  // Copy min2 into time_display2
-        strcat(time_display2, ":");  // Add a ":" between minutes and seconds
-        strcat(time_display2, sec2);  // Add seconds to time_display2
+            char time_display2[20];  // Sufficient size to hold both parts
+            strcpy(time_display2, min2);  // Copy min2 into time_display2
+            strcat(time_display2, ":");  // Add a ":" between minutes and seconds
+            strcat(time_display2, sec2);  // Add seconds to time_display2
 
-        //Display the result in the LCD Display;
-        lcd_display_chess_counter(time_display1, time_display2);
+            //Display the result in the LCD Display;
+            lcd_display_chess_counter(time_display1, time_display2);
+        }
     }
     
 }

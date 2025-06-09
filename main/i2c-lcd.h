@@ -20,3 +20,7 @@ void lcd_display_custom();
 void lcd_display_set_custom();
 void lcd_display_custom_digit();
 void lcd_display_custom_set_digit();
+
+//Display Winner screen
+void lcd_display_p1_winner();
+void lcd_display_p2_winner();

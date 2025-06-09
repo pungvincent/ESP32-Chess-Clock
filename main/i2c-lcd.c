@@ -309,3 +309,30 @@ void lcd_display_custom_set_digit() {
 	lcd_put_cur_player2(1, 1);
 	lcd_send_string_player2(Custom_set_inc_timer_display);
 }
+
+void lcd_display_p1_winner() {
+	lcd_clear_player1();
+	lcd_put_cur_player1(0, 4);
+	lcd_send_string_player1("Player 1");
+	lcd_put_cur_player1(1, 6);
+	lcd_send_string_player1("WINS");
+	lcd_clear_player2();
+	lcd_clear_player2();
+	lcd_put_cur_player2(0, 4);
+	lcd_send_string_player2("YOU");
+	lcd_put_cur_player2(1, 6);
+	lcd_send_string_player2("LOSE");
+}
+
+void lcd_display_p2_winner() {
+	lcd_clear_player2();
+	lcd_put_cur_player2(0, 4);
+	lcd_send_string_player2("Player 2");
+	lcd_put_cur_player2(1, 6);
+	lcd_send_string_player2("WINS");
+	lcd_clear_player1();
+	lcd_put_cur_player1(0, 4);
+	lcd_send_string_player1("YOU");
+	lcd_put_cur_player1(1, 6);
+	lcd_send_string_player1("LOSE");
+}
